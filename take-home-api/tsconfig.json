@@ -16,9 +16,10 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "baseUrl": "./",
     "paths": {
-      "@/*": ["./src/*"],
-      "@Helper/*": ["./src/common/helper/*"]
+      "@/*": ["src/*"],
+      "@Helper/*": ["src/common/helper/*"]
     }
   }
 }

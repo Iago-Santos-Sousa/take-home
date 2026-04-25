@@ -1,34 +1,65 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { AppointmentsService } from './appointments.service';
-import { CreateAppointmentDto } from './dto/create-appointment.dto';
-import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  ParseIntPipe,
+} from "@nestjs/common";
+import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { AppointmentsService } from "./appointments.service";
+import { CreateAppointmentDto } from "./dto/create-appointment.dto";
+import { UpdateAppointmentDto } from "./dto/update-appointment.dto";
+import { CurrentUser } from "../auth/current-user.decorator";
+import { CurrentUserDto } from "../auth/current-user.dto";
+import {
+  CreateAppointmentDocs,
+  GetAppointmentsDocs,
+  UpdateAppointmentDocs,
+} from "./appointments.docs";
 
-@Controller('appointments')
+@ApiTags("Appointments")
+@ApiBearerAuth()
+@Controller("appointments")
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
   @Post()
-  create(@Body() createAppointmentDto: CreateAppointmentDto) {
-    return this.appointmentsService.create(createAppointmentDto);
+  @CreateAppointmentDocs()
+  async create(
+    @CurrentUser() user: CurrentUserDto,
+    @Body() createAppointmentDto: CreateAppointmentDto,
+  ) {
+    const appointment = await this.appointmentsService.create(
+      user.sub,
+      createAppointmentDto,
+    );
+    return { message: "Appointment created successfully", data: appointment };
   }
 
   @Get()
-  findAll() {
-    return this.appointmentsService.findAll();
+  @GetAppointmentsDocs()
+  async findAll(@CurrentUser() user: CurrentUserDto) {
+    const appointments = await this.appointmentsService.findAllByUser(user.sub);
+    return {
+      message: "Appointments retrieved successfully",
+      data: appointments,
+    };
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.appointmentsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAppointmentDto: UpdateAppointmentDto) {
-    return this.appointmentsService.update(+id, updateAppointmentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.appointmentsService.remove(+id);
+  @Patch(":id")
+  @UpdateAppointmentDocs()
+  async update(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: CurrentUserDto,
+    @Body() updateAppointmentDto: UpdateAppointmentDto,
+  ) {
+    const appointment = await this.appointmentsService.update(
+      id,
+      user.sub,
+      updateAppointmentDto,
+    );
+    return { message: "Appointment updated successfully", data: appointment };
   }
 }

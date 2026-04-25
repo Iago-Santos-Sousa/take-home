@@ -9,7 +9,7 @@ import {
 } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
-import { UserRole } from "src/utils/enums";
+import { UserRole } from "@/utils/enums";
 
 export class CreateUserDto {
   @ApiProperty({ description: "Username", example: "Jhon Doe" })

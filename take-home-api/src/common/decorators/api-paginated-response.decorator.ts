@@ -5,8 +5,8 @@ import {
   ApiOperation,
   getSchemaPath,
 } from "@nestjs/swagger";
-import { PageDto } from "src/common/dtos";
-import { UserDto } from "src/user/dto/user.dto";
+import { PageDto } from "@/common/dtos";
+import { UserDto } from "@/user/dto/user.dto";
 
 export const ApiPaginatedResponse = <TModel extends Type<any>>(
   model: TModel,

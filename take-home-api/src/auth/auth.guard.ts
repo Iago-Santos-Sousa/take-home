@@ -13,8 +13,8 @@ import { AuthGuard } from "@nestjs/passport";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
-import { IS_PUBLIC_KEY } from "src/common/decorators/skipAuth.decorator";
-import { UserRole } from "src/utils/enums";
+import { IS_PUBLIC_KEY } from "@/common/decorators/skipAuth.decorator";
+import { UserRole } from "@/utils/enums";
 import { ROLES_KEY } from "../common/decorators/roles.decorator";
 
 @Injectable()
@@ -81,6 +81,13 @@ export class JwtAuthGuard extends AuthGuard("jwt") implements CanActivate {
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
+    // Check cookie first (browser clients)
+    const cookieToken = (
+      request as Request & { cookies?: Record<string, string> }
+    ).cookies?.["access_token"];
+    if (cookieToken) return cookieToken;
+
+    // Fall back to Authorization header (Swagger / API clients)
     const [type, token] = request.headers.authorization?.split(" ") ?? [];
     return type === "Bearer" ? token : undefined;
   }

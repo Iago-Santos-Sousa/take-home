@@ -27,7 +27,7 @@ export default function middleware(request: NextRequest) {
   const isAdminRoute = ADMIN_ROUTES.some((route) => pathname.startsWith(route));
 
   const isPublicRoute = PUBLIC_ROUTES.some((route) =>
-    pathname.startsWith(route),
+    route === "/" ? pathname === "/" : pathname.startsWith(route),
   );
 
   // Rota pública: redireciona para dashboard se já logado
@@ -35,7 +35,7 @@ export default function middleware(request: NextRequest) {
     if (token) {
       const payload = decodeJWT(token);
       if (payload && !isTokenExpired(payload)) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
+        return NextResponse.redirect(new URL("/exams", request.url));
       }
     }
     return NextResponse.next();
@@ -59,15 +59,15 @@ export default function middleware(request: NextRequest) {
     }
 
     // Rota de admin: verifica role
-    if (isAdminRoute && payload.role !== "admin") {
+    if (isAdminRoute && payload.roles?.[0] !== "admin") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
     // Injeta dados do usuário como header para o layout/page ler
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-user-id", payload.sub);
-    requestHeaders.set("x-user-role", payload.role);
-    requestHeaders.set("x-user-name", payload.name);
+    requestHeaders.set("x-user-role", payload.roles?.[0] ?? "user");
+    requestHeaders.set("x-user-name", payload.username ?? "");
     requestHeaders.set("x-user-email", payload.email);
 
     return NextResponse.next({ request: { headers: requestHeaders } });

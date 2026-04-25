@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import Navbar from "@/components/Navbar";
 
 interface User {
   id: string;
@@ -10,9 +11,8 @@ interface User {
 
 async function getCurrentUser(): Promise<User | null> {
   const headerStore = await headers();
-
   const id = headerStore.get("x-user-id");
-  if (!id) return null; // Middleware não injetou → não autenticado
+  if (!id) return null;
 
   return {
     id,
@@ -28,16 +28,16 @@ export default async function AuthenticatedLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
-
   if (!user) redirect("/login");
 
   return (
-    <div>
-      <nav>
-        <span>Olá, {user.name}</span>
-        {user.role === "admin" && <a href="/admin">Painel Admin</a>}
-      </nav>
-      <main>{children}</main>
+    <div style={{ minHeight: "100vh", background: "#f0f4ff" }}>
+      <Navbar userName={user.name} userRole={user.role} />
+      <main
+        style={{ maxWidth: "1280px", margin: "0 auto", padding: "32px 16px" }}
+      >
+        {children}
+      </main>
     </div>
   );
 }

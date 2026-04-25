@@ -1,15 +1,16 @@
 export interface JWTPayload {
-  sub: string; // id do usuário
-  name: string;
+  sub: string; // user_id
+  username: string; // user's full name
   email: string;
-  role: "admin" | "user";
-  jwtRefreshToken?: string;
+  roles: string[]; // e.g. ["user"] or ["admin"]
+  type: string; // "access_token"
   exp: number;
+  iat: number;
 }
 
 /**
  * Decodifica o payload do JWT (sem verificar assinatura).
- * A verificação da assinatura deve ser feita no backend.
+ * A verificação da assinatura é feita no backend.
  */
 export function decodeJWT(token: string): JWTPayload | null {
   try {

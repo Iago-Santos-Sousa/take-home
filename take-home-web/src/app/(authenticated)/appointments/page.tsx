@@ -20,15 +20,15 @@ import { useState } from "react";
 import { AxiosError } from "axios";
 import { useAppointments, useUpdateAppointment } from "@/hooks/useAppointments";
 import { toaster } from "@/components/ui/toaster";
-import type { Appointment, AppointmentStatus } from "@/types/appointment";
+import type { IAppointment } from "@/types/appointment";
 import { STATUS_COLORS, STATUS_LABELS } from "@/types/appointment";
 
 function AppointmentCard({
   appointment,
   onEdit,
 }: {
-  appointment: Appointment;
-  onEdit: (a: Appointment) => void;
+  appointment: IAppointment;
+  onEdit: (a: IAppointment) => void;
 }) {
   const isPast = new Date(appointment.scheduled_at) < new Date();
 
@@ -94,14 +94,14 @@ export default function AppointmentsPage() {
   const updateAppointment = useUpdateAppointment();
 
   const [editingAppointment, setEditingAppointment] =
-    useState<Appointment | null>(null);
+    useState<IAppointment | null>(null);
   const [newScheduledAt, setNewScheduledAt] = useState("");
 
   const minDateTime = new Date();
   minDateTime.setMinutes(minDateTime.getMinutes() + 30);
   const minDateTimeStr = minDateTime.toISOString().slice(0, 16);
 
-  const openEdit = (appointment: Appointment) => {
+  const openEdit = (appointment: IAppointment) => {
     setEditingAppointment(appointment);
     const d = new Date(appointment.scheduled_at);
     setNewScheduledAt(

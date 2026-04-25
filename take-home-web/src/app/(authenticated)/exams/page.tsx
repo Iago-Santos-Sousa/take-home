@@ -16,9 +16,9 @@ import {
 import Link from "next/link";
 import { useExams } from "@/hooks/useExams";
 import { useDebounce } from "@/hooks/useDebounce";
-import type { Exam } from "@/types/exam";
+import type { IExam } from "@/types/exam";
 
-function ExamCard({ exam }: { exam: Exam }) {
+function ExamCard({ exam }: { exam: IExam }) {
   return (
     <Box
       bg="white"

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import axios from "axios";
 import ExamDetailClient from "./ExamDetailClient";
-import type { Exam } from "@/types/exam";
+import type { IExam } from "@/types/exam";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-async function fetchExam(id: string): Promise<Exam | null> {
+async function fetchExam(id: string): Promise<IExam | null> {
   try {
-    const response = await axios.get<{ data: Exam }>(
+    const response = await axios.get<{ data: IExam }>(
       `${process.env.NEXT_PUBLIC_API_URL}/exams/${id}`,
     );
     return response.data.data;

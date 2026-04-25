@@ -3,10 +3,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/integration/api";
 import type {
-  Exam,
-  ExamsPageResponse,
-  CreateExamInput,
-  UpdateExamInput,
+  IExam,
+  IExamsPageResponse,
+  ICreateExamInput,
+  IUpdateExamInput,
 } from "@/types/exam";
 
 interface UseExamsParams {
@@ -18,10 +18,10 @@ interface UseExamsParams {
 export function useExams(params: UseExamsParams = {}) {
   const { search = "", page = 1, take = 10 } = params;
 
-  return useQuery<ExamsPageResponse>({
+  return useQuery<IExamsPageResponse>({
     queryKey: ["exams", { search, page, take }],
     queryFn: async () => {
-      const response = await api.get<ExamsPageResponse>("/exams", {
+      const response = await api.get<IExamsPageResponse>("/exams", {
         params: {
           search: search || undefined,
           page,
@@ -35,10 +35,10 @@ export function useExams(params: UseExamsParams = {}) {
 }
 
 export function useExam(id: number) {
-  return useQuery<Exam>({
+  return useQuery<IExam>({
     queryKey: ["exam", id],
     queryFn: async () => {
-      const response = await api.get<{ message: string; data: Exam }>(
+      const response = await api.get<{ message: string; data: IExam }>(
         `/exams/${id}`,
       );
       return response.data.data;
@@ -51,8 +51,8 @@ export function useCreateExam() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreateExamInput) => {
-      const response = await api.post<{ message: string; data: Exam }>(
+    mutationFn: async (data: ICreateExamInput) => {
+      const response = await api.post<{ message: string; data: IExam }>(
         "/exams",
         data,
       );
@@ -68,8 +68,14 @@ export function useUpdateExam() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: UpdateExamInput }) => {
-      const response = await api.patch<{ message: string; data: Exam }>(
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: IUpdateExamInput;
+    }) => {
+      const response = await api.patch<{ message: string; data: IExam }>(
         `/exams/${id}`,
         data,
       );

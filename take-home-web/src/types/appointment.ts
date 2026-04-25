@@ -1,38 +1,38 @@
-import { Exam } from "./exam";
+import { IExam } from "./exam";
 
-export type AppointmentStatus = "pending" | "confirmed" | "cancelled";
+export type TAppointmentStatus = "pending" | "confirmed" | "cancelled";
 
-export interface Appointment {
+export interface IAppointment {
   appointment_id: number;
   user_id: number;
   exam_id: number;
-  exam: Exam;
+  exam: IExam;
   scheduled_at: string;
-  status: AppointmentStatus;
+  status: TAppointmentStatus;
   notes?: string;
   created_at: string;
   updated_at: string;
 }
 
-export interface CreateAppointmentInput {
+export interface ICreateAppointmentInput {
   exam_id: number;
   scheduled_at: string;
   notes?: string;
 }
 
-export interface UpdateAppointmentInput {
+export interface IUpdateAppointmentInput {
   scheduled_at?: string;
   notes?: string;
-  status?: AppointmentStatus;
+  status?: TAppointmentStatus;
 }
 
-export const STATUS_LABELS: Record<AppointmentStatus, string> = {
+export const STATUS_LABELS: Record<TAppointmentStatus, string> = {
   pending: "Pendente",
   confirmed: "Confirmado",
   cancelled: "Cancelado",
 };
 
-export const STATUS_COLORS: Record<AppointmentStatus, string> = {
+export const STATUS_COLORS: Record<TAppointmentStatus, string> = {
   pending: "yellow",
   confirmed: "green",
   cancelled: "red",

@@ -1,4 +1,5 @@
-export interface Exam {
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+export interface IExam {
   exam_id: number;
   name: string;
   description?: string;
@@ -10,7 +11,7 @@ export interface Exam {
   updated_at: string;
 }
 
-export interface ExamPageMeta {
+export interface IExamPageMeta {
   page: number;
   take: number;
   itemCount: number;
@@ -19,12 +20,12 @@ export interface ExamPageMeta {
   hasNextPage: boolean;
 }
 
-export interface ExamsPageResponse {
-  data: Exam[];
-  meta: ExamPageMeta;
+export interface IExamsPageResponse {
+  data: IExam[];
+  meta: IExamPageMeta;
 }
 
-export interface CreateExamInput {
+export interface ICreateExamInput {
   name: string;
   description?: string;
   preparation_instructions?: string;
@@ -33,4 +34,4 @@ export interface CreateExamInput {
   is_active?: boolean;
 }
 
-export interface UpdateExamInput extends Partial<CreateExamInput> {}
+export interface IUpdateExamInput extends Partial<ICreateExamInput> {}

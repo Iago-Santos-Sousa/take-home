@@ -6,29 +6,30 @@ import { AxiosError } from "axios";
 import { api } from "@/integration/api";
 import { useUser } from "@/contexts/user-context";
 
-interface LoginInput {
+interface ILoginInput {
   email: string;
   password: string;
 }
 
-interface RegisterInput {
+interface IRegisterInput {
   name: string;
   email: string;
   password: string;
   role?: "user" | "admin";
 }
 
-interface ApiErrorResponse {
+interface IApiErrorResponse {
   message: string;
 }
 
 function extractErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof AxiosError) {
-    const data = error.response?.data as ApiErrorResponse | undefined;
+    const data = error.response?.data as IApiErrorResponse | undefined;
     if (typeof data?.message === "string") return data.message;
     if (Array.isArray(data?.message))
       return (data.message as string[]).join(", ");
   }
+
   return fallback;
 }
 
@@ -36,7 +37,7 @@ export function useLogin() {
   const { setUser } = useUser();
 
   return useMutation({
-    mutationFn: async (data: LoginInput) => {
+    mutationFn: async (data: ILoginInput) => {
       const response = await api.post<{
         message: string;
         user: { sub: number; username: string; email: string; roles: string[] };
@@ -64,7 +65,7 @@ export function useRegister() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: async (data: RegisterInput) => {
+    mutationFn: async (data: IRegisterInput) => {
       const response = await api.post("/user", data);
       return response.data;
     },

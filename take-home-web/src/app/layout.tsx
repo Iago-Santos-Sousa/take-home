@@ -13,7 +13,6 @@ export const metadata: Metadata = {
 async function getUserFromHeaders(): Promise<User | null> {
   const headerStore = await headers();
   const id = headerStore.get("x-user-id");
-
   if (!id) return null;
 
   return {
@@ -25,9 +24,8 @@ async function getUserFromHeaders(): Promise<User | null> {
 }
 
 export default async function RootLayout(props: { children: React.ReactNode }) {
-  // Executado no servidor a cada request — dados sempre frescos
+  // Executado no servidor a cada request - dados sempre frescos
   const initialUser = await getUserFromHeaders();
-
   const { children } = props;
 
   return (

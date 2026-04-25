@@ -27,7 +27,7 @@ const UserContext = createContext<UserContextValue | null>(null);
 
 interface UserProviderProps {
   children: React.ReactNode;
-  initialUser: User | null; // vem do Server Component (layout.tsx)
+  initialUser: User | null; // Vem do Server Component (layout.tsx)
 }
 
 export function UserProvider({ children, initialUser }: UserProviderProps) {

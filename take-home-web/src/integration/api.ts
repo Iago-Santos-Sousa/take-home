@@ -5,8 +5,6 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// Interceptor de RESPONSE
-// Trata erros de autenticação e tenta refresh do token
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -18,7 +16,6 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Chama o refresh — o backend lê o refresh_token do cookie e seta novo access_token
         await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`,
           {},

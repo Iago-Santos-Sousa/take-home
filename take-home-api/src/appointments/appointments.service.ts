@@ -5,25 +5,24 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
 import { isPast, parseISO } from "date-fns";
 import { Appointment } from "./entities/appointment.entity";
 import { CreateAppointmentDto } from "./dto/create-appointment.dto";
 import { UpdateAppointmentDto } from "./dto/update-appointment.dto";
 import { ExamsService } from "../exams/exams.service";
+import { AppointmentsRepository } from "./repositories/appointments.repository";
 
 @Injectable()
 export class AppointmentsService {
   constructor(
-    @InjectRepository(Appointment)
-    private readonly appointmentRepository: Repository<Appointment>,
+    private readonly appointmentRepository: AppointmentsRepository,
     private readonly examsService: ExamsService,
   ) {}
 
   private validateNotInPast(scheduledAt: string | Date): void {
     const date =
       typeof scheduledAt === "string" ? parseISO(scheduledAt) : scheduledAt;
+
     if (isPast(date)) {
       throw new BadRequestException(
         "O agendamento não pode ser realizado para uma data no passado",
@@ -54,6 +53,7 @@ export class AppointmentsService {
     }
 
     const existing = await queryBuilder.getOne();
+
     if (existing) {
       throw new ConflictException(
         "Você já possui um agendamento neste horário",
@@ -66,7 +66,9 @@ export class AppointmentsService {
     createAppointmentDto: CreateAppointmentDto,
   ): Promise<Appointment> {
     await this.examsService.findOne(createAppointmentDto.exam_id);
+
     this.validateNotInPast(createAppointmentDto.scheduled_at);
+
     await this.checkConflict(userId, createAppointmentDto.scheduled_at);
 
     const appointment = this.appointmentRepository.create({
@@ -110,11 +112,13 @@ export class AppointmentsService {
 
     if (updateAppointmentDto.scheduled_at) {
       this.validateNotInPast(updateAppointmentDto.scheduled_at);
+
       await this.checkConflict(
         userId,
         updateAppointmentDto.scheduled_at,
         appointmentId,
       );
+
       appointment.scheduled_at = parseISO(updateAppointmentDto.scheduled_at);
     }
 

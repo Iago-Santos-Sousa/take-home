@@ -1,6 +1,4 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import { Cache } from "cache-manager";
 import { Exam } from "./entities/exam.entity";
@@ -8,12 +6,11 @@ import { CreateExamDto } from "./dto/create-exam.dto";
 import { UpdateExamDto } from "./dto/update-exam.dto";
 import { ExamPageOptionsDto } from "./dto/exam-page-options.dto";
 import { PageDto, PageMetaDto } from "@/common/dtos";
-
+import { ExamRepository } from "./repositories/exam.repository";
 @Injectable()
 export class ExamsService {
   constructor(
-    @InjectRepository(Exam)
-    private readonly examRepository: Repository<Exam>,
+    private readonly examRepository: ExamRepository,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
@@ -22,6 +19,7 @@ export class ExamsService {
       ...createExamDto,
       is_active: createExamDto.is_active ?? true,
     });
+
     const saved = await this.examRepository.save(exam);
     await this.cacheManager.clear();
     return saved;
@@ -54,9 +52,11 @@ export class ExamsService {
     const exam = await this.examRepository.findOne({
       where: { exam_id, is_active: true },
     });
+
     if (!exam) {
-      throw new NotFoundException(`Exam with ID ${exam_id} not found`);
+      throw new NotFoundException(`Exame com ID ${exam_id} não encontrado.`);
     }
+
     return exam;
   }
 

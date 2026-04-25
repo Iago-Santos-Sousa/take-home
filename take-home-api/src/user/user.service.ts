@@ -21,6 +21,7 @@ const scrypt = promisify(_scrypt);
 @Injectable()
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
+
   async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
     try {
       const existUser = await this.userRepository.findOne({
@@ -147,7 +148,6 @@ export class UserService {
       .take(pageOptionsDto.take)
       .orderBy("user.user_id", pageOptionsDto.order);
 
-    // const [data, itemCount] = await queryBuilder.getManyAndCount();
     const entities = await queryBuilder.getMany();
     const itemCount = await queryBuilder.getCount();
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });

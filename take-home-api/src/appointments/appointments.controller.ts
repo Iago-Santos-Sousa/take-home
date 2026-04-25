@@ -35,6 +35,7 @@ export class AppointmentsController {
       user.sub,
       createAppointmentDto,
     );
+
     return { message: "Appointment created successfully", data: appointment };
   }
 
@@ -60,6 +61,7 @@ export class AppointmentsController {
       user.sub,
       updateAppointmentDto,
     );
+
     return { message: "Appointment updated successfully", data: appointment };
   }
 }

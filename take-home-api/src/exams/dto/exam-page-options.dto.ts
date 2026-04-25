@@ -5,7 +5,7 @@ import { PageOptionsDto } from "@/common/dtos";
 export class ExamPageOptionsDto extends PageOptionsDto {
   @ApiPropertyOptional({
     example: "Hemograma",
-    description: "Search by exam name",
+    description: "Procure pelo nome do exame",
   })
   @IsOptional()
   @IsString()

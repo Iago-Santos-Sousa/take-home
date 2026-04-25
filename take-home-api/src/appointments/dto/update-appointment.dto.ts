@@ -11,7 +11,7 @@ export class UpdateAppointmentDto {
   @IsDateString()
   scheduled_at?: string;
 
-  @ApiPropertyOptional({ example: "Updated notes" })
+  @ApiPropertyOptional({ example: "Atualização de notas" })
   @IsOptional()
   @IsString()
   notes?: string;

@@ -62,6 +62,19 @@ export class ExamsService {
 
   async update(exam_id: number, updateExamDto: UpdateExamDto): Promise<Exam> {
     const exam = await this.findOne(exam_id);
+
+    Object.keys(updateExamDto).forEach((key) => {
+      if (
+        updateExamDto[key] === undefined ||
+        !(key in updateExamDto) ||
+        updateExamDto[key] === null ||
+        (typeof updateExamDto[key] === "string" &&
+          updateExamDto[key].trim() === "")
+      ) {
+        updateExamDto[key] = null;
+      }
+    });
+
     Object.assign(exam, updateExamDto);
     const saved = await this.examRepository.save(exam);
     await this.cacheManager.clear();

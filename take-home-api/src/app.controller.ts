@@ -1,10 +1,9 @@
 import { Controller, Get } from "@nestjs/common";
 import { AppService } from "./app.service";
-import { ApiExcludeController, ApiOperation } from "@nestjs/swagger";
+import { ApiOperation } from "@nestjs/swagger";
 import { Public } from "./common/decorators/skipAuth.decorator";
 
 @Controller("status")
-// @ApiExcludeController()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 

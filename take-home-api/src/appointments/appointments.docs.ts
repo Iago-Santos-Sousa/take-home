@@ -5,6 +5,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
 } from "@nestjs/swagger";
 import { CreateAppointmentDto } from "./dto/create-appointment.dto";
 
@@ -35,6 +36,14 @@ export const GetAppointmentsDocs = () => {
     ApiOperation({
       summary: "List all appointments for the authenticated user",
     }),
+    ApiQuery({ name: "page", required: false, example: 1 }),
+    ApiQuery({ name: "take", required: false, example: 10 }),
+    ApiQuery({ name: "order", required: false, enum: ["ASC", "DESC"] }),
+    ApiQuery({
+      name: "status",
+      required: false,
+      enum: ["pending", "confirmed", "cancelled"],
+    }),
     ApiOkResponse({
       description: "Appointments retrieved successfully",
       schema: {
@@ -45,8 +54,24 @@ export const GetAppointmentsDocs = () => {
             example: "Appointments retrieved successfully",
           },
           data: {
-            type: "array",
-            items: { $ref: "#/components/schemas/Appointment" },
+            type: "object",
+            properties: {
+              data: {
+                type: "array",
+                items: { $ref: "#/components/schemas/Appointment" },
+              },
+              meta: {
+                type: "object",
+                properties: {
+                  page: { type: "number", example: 1 },
+                  take: { type: "number", example: 10 },
+                  itemCount: { type: "number", example: 23 },
+                  pageCount: { type: "number", example: 3 },
+                  hasPreviousPage: { type: "boolean", example: false },
+                  hasNextPage: { type: "boolean", example: true },
+                },
+              },
+            },
           },
         },
       },

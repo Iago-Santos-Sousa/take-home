@@ -33,7 +33,7 @@ export class CreateExamDto {
 
   @ApiPropertyOptional({ example: 89.9 })
   @IsOptional()
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   price?: number;
 

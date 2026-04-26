@@ -10,7 +10,7 @@ export const dataSourceOptions: DataSourceOptions = {
   database: process.env.DB_SCHEMA ?? "takehome",
   entities: ["dist/**/*.entity.js"],
   migrations: ["dist/**/migrations/*.js"],
-  synchronize: true,
+  synchronize: false,
   migrationsRun: true,
   extra: { bigNumberStrings: false },
   poolSize: 10,

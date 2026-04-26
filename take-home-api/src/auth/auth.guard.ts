@@ -11,7 +11,6 @@ import {
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { Reflector } from "@nestjs/core";
-import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
 import { IS_PUBLIC_KEY } from "@/common/decorators/skipAuth.decorator";
 import { UserRole } from "@/utils/enums";
@@ -19,10 +18,7 @@ import { ROLES_KEY } from "../common/decorators/roles.decorator";
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard("jwt") implements CanActivate {
-  constructor(
-    private jwtService: JwtService,
-    private reflector: Reflector,
-  ) {
+  constructor(private reflector: Reflector) {
     super();
   }
 
@@ -47,11 +43,6 @@ export class JwtAuthGuard extends AuthGuard("jwt") implements CanActivate {
     }
 
     try {
-      // const payload = await this.jwtService.verifyAsync(token, {
-      //   secret: process.env.JWT_SECRET,
-      // });
-      // request["user"] = payload;
-
       const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
         ROLES_KEY,
         [context.getHandler(), context.getClass()],
@@ -84,7 +75,8 @@ export class JwtAuthGuard extends AuthGuard("jwt") implements CanActivate {
     // Check cookie first (browser clients)
     const cookieToken = (
       request as Request & { cookies?: Record<string, string> }
-    ).cookies?.["access_token"];
+    ).cookies?.["access_token"] as string | undefined;
+
     if (cookieToken) return cookieToken;
 
     // Fall back to Authorization header (Swagger / API clients)

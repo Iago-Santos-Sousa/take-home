@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   ParseIntPipe,
+  Query,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { AppointmentsService } from "./appointments.service";
@@ -18,6 +19,7 @@ import {
   GetAppointmentsDocs,
   UpdateAppointmentDocs,
 } from "./appointments.docs";
+import { AppointmentPageOptionsDto } from "./dto/appointment-page-options.dto";
 
 @ApiTags("Appointments")
 @ApiBearerAuth()
@@ -41,8 +43,15 @@ export class AppointmentsController {
 
   @Get()
   @GetAppointmentsDocs()
-  async findAll(@CurrentUser() user: CurrentUserDto) {
-    const appointments = await this.appointmentsService.findAllByUser(user.sub);
+  async findAll(
+    @CurrentUser() user: CurrentUserDto,
+    @Query() pageOptionsDto: AppointmentPageOptionsDto,
+  ) {
+    const appointments = await this.appointmentsService.findAllByUser(
+      user.sub,
+      pageOptionsDto,
+    );
+
     return {
       message: "Appointments retrieved successfully",
       data: appointments,

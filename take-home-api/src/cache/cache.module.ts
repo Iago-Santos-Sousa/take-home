@@ -14,7 +14,7 @@ import KeyvRedis from "@keyv/redis";
           configService.get<string>("REDIS_URL") ?? "redis://localhost:6379";
         return {
           stores: [new KeyvRedis(redisUrl)],
-          ttl: 5 * 60 * 1000, // 5 minutes in ms
+          ttl: 5 * 60 * 1000, // 5 minutos em milissegundos
         };
       },
     }),

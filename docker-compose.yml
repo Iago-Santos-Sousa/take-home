@@ -1,5 +1,4 @@
 version: "3.9"
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -8,13 +7,13 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres123
-      POSTGRES_DB: take-home
+      POSTGRES_DB: takehome
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d take-home"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d takehome"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,7 +45,8 @@ services:
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: postgres123
-      DB_SCHEMA: take-home
+      DB_NAME: takehome
+      DB_SCHEMA: takehome
       DB_SYNCHRONIZE: "false"
       REDIS_URL: redis://redis:6379
       JWT_SECRET: your-super-secret-jwt-key-change-in-production

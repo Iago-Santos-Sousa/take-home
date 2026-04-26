@@ -8,14 +8,16 @@ import type {
   ICreateExamInput,
   IUpdateExamInput,
 } from "@/types/exam";
+import { toaster } from "@/components/ui/toaster";
+import { extractErrorMessage } from "@/utils/extractErrorMessage";
 
-interface UseExamsParams {
+interface IUseExamsParams {
   search?: string;
   page?: number;
   take?: number;
 }
 
-export function useExams(params: UseExamsParams = {}) {
+export function useExams(params: IUseExamsParams = {}) {
   const { search = "", page = 1, take = 10 } = params;
 
   return useQuery<IExamsPageResponse>({
@@ -30,7 +32,7 @@ export function useExams(params: UseExamsParams = {}) {
       });
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 min — mirrors Redis TTL
+    staleTime: 5 * 60 * 1000, // 5 min — com Redis TTL
   });
 }
 
@@ -50,40 +52,74 @@ export function useExam(id: number) {
 export function useCreateExam() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (data: ICreateExamInput) => {
-      const response = await api.post<{ message: string; data: IExam }>(
-        "/exams",
-        data,
-      );
-      return response.data.data;
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["exams"] });
-    },
-  });
+  const { mutateAsync: handleCreateExam, isPending: isCreatingExam } =
+    useMutation({
+      mutationKey: ["createExam"],
+      mutationFn: async (data: ICreateExamInput) => {
+        const response = await api.post<{ message: string; data: IExam }>(
+          "/exams",
+          data,
+        );
+        return response.data.data;
+      },
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: ["exams"] });
+        toaster.create({
+          title: "Exame criado com sucesso!",
+          type: "success",
+        });
+      },
+      onError: (error: unknown) => {
+        const message = extractErrorMessage(
+          error,
+          "Erro ao criar o exame. Tente novamente.",
+        );
+        toaster.create({ title: message, type: "error" });
+      },
+    });
+
+  return {
+    handleCreateExam,
+    isCreatingExam,
+  };
 }
 
 export function useUpdateExam() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({
-      id,
-      data,
-    }: {
-      id: number;
-      data: IUpdateExamInput;
-    }) => {
-      const response = await api.patch<{ message: string; data: IExam }>(
-        `/exams/${id}`,
+  const { mutateAsync: handleUpdateExam, isPending: isUpdatingExam } =
+    useMutation({
+      mutationKey: ["updateExam"],
+      mutationFn: async ({
+        id,
         data,
-      );
-      return response.data.data;
-    },
-    onSuccess: (_data, variables) => {
-      void queryClient.invalidateQueries({ queryKey: ["exams"] });
-      void queryClient.invalidateQueries({ queryKey: ["exam", variables.id] });
-    },
-  });
+      }: {
+        id: number;
+        data: IUpdateExamInput;
+      }) => {
+        const response = await api.patch<{ message: string; data: IExam }>(
+          `/exams/${id}`,
+          data,
+        );
+        return response.data.data;
+      },
+      onSuccess: (_data, variables) => {
+        void queryClient.invalidateQueries({ queryKey: ["exams"] });
+        void queryClient.invalidateQueries({
+          queryKey: ["exam", variables.id],
+        });
+      },
+      onError: (error: unknown) => {
+        const message = extractErrorMessage(
+          error,
+          "Erro ao atualizar o exame. Tente novamente.",
+        );
+        toaster.create({ title: message, type: "error" });
+      },
+    });
+
+  return {
+    handleUpdateExam,
+    isUpdatingExam,
+  };
 }

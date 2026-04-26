@@ -15,15 +15,13 @@ import {
   Text,
   Textarea,
 } from "@chakra-ui/react";
-import { AxiosError } from "axios";
 import { useCreateExam } from "@/hooks/useExams";
-import { toaster } from "@/components/ui/toaster";
 
 const createExamSchema = z.object({
   name: z
     .string()
     .min(3, "Nome deve ter pelo menos 3 caracteres")
-    .max(255, "Nome muito longo"),
+    .max(100, "Nome muito longo"),
   description: z.string().optional(),
   preparation_instructions: z.string().optional(),
   duration_minutes: z.coerce
@@ -43,7 +41,7 @@ const createExamSchema = z.object({
 type CreateExamForm = z.infer<typeof createExamSchema>;
 
 export default function CreateExamsPage() {
-  const createExam = useCreateExam();
+  const { handleCreateExam, isCreatingExam } = useCreateExam();
 
   const {
     register,
@@ -59,9 +57,9 @@ export default function CreateExamsPage() {
 
   const isActive = watch("is_active");
 
-  const onSubmit = (data: CreateExamForm) => {
-    createExam.mutate(
-      {
+  const onSubmit = async (data: CreateExamForm) => {
+    try {
+      await handleCreateExam({
         name: data.name,
         description: data.description || undefined,
         preparation_instructions: data.preparation_instructions || undefined,
@@ -74,25 +72,12 @@ export default function CreateExamsPage() {
             ? Number(data.price)
             : undefined,
         is_active: data.is_active,
-      },
-      {
-        onSuccess: () => {
-          toaster.create({
-            title: "Exame criado com sucesso!",
-            type: "success",
-          });
-          reset();
-        },
-        onError: (error: unknown) => {
-          const message =
-            error instanceof AxiosError
-              ? ((error.response?.data as { message?: string })?.message ??
-                "Erro ao criar exame")
-              : "Erro ao criar exame";
-          toaster.create({ title: message, type: "error" });
-        },
-      },
-    );
+      });
+
+      reset();
+    } catch (error) {
+      console.error("Erro ao criar exame:", error);
+    }
   };
 
   return (
@@ -186,7 +171,7 @@ export default function CreateExamsPage() {
             <Button
               type="submit"
               colorPalette="blue"
-              loading={createExam.isPending}
+              loading={isCreatingExam}
               loadingText="Criando..."
               alignSelf="flex-start"
               px={8}

@@ -13,9 +13,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import Link from "next/link";
-import { AxiosError } from "axios";
 import { useLogin } from "@/hooks/useAuth";
-import { toaster } from "@/components/ui/toaster";
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -25,7 +23,7 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const login = useLogin();
+  const { handleLogin, isLoggingIn } = useLogin();
 
   const {
     register,
@@ -36,16 +34,7 @@ export default function LoginPage() {
   });
 
   const onSubmit = (data: LoginForm) => {
-    login.mutate(data, {
-      onError: (error: unknown) => {
-        const message =
-          error instanceof AxiosError
-            ? ((error.response?.data as { message?: string })?.message ??
-              "Credenciais inválidas")
-            : "Erro ao realizar login";
-        toaster.create({ title: message, type: "error" });
-      },
-    });
+    handleLogin(data);
   };
 
   return (
@@ -149,7 +138,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 w="full"
-                loading={login.isPending}
+                loading={isLoggingIn}
                 loadingText="Entrando..."
                 style={{
                   background: "linear-gradient(135deg, #2563eb, #1d4ed8)",

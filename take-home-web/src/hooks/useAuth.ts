@@ -2,9 +2,10 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { AxiosError } from "axios";
 import { api } from "@/integration/api";
 import { useUser } from "@/contexts/user-context";
+import { toaster } from "@/components/ui/toaster";
+import { extractErrorMessage } from "@/utils/extractErrorMessage";
 
 interface ILoginInput {
   email: string;
@@ -18,25 +19,11 @@ interface IRegisterInput {
   role?: "user" | "admin";
 }
 
-interface IApiErrorResponse {
-  message: string;
-}
-
-function extractErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof AxiosError) {
-    const data = error.response?.data as IApiErrorResponse | undefined;
-    if (typeof data?.message === "string") return data.message;
-    if (Array.isArray(data?.message))
-      return (data.message as string[]).join(", ");
-  }
-
-  return fallback;
-}
-
 export function useLogin() {
   const { setUser } = useUser();
 
-  return useMutation({
+  const { mutateAsync: handleLogin, isPending: isLoggingIn } = useMutation({
+    mutationKey: ["login"],
     mutationFn: async (data: ILoginInput) => {
       const response = await api.post<{
         message: string;
@@ -52,30 +39,49 @@ export function useLogin() {
         email: user.email,
         role: (user.roles[0] as "admin" | "user") ?? "user",
       });
-      // Full navigation so middleware runs fresh with the new cookie
+      // Navegação completa para que o middleware seja executado do zero com o novo cookie.
       window.location.href = "/exams";
     },
     onError: (error: unknown) => {
-      return extractErrorMessage(error, "Falha ao realizar login");
+      const message = extractErrorMessage(error, "Credenciais inválidas");
+      toaster.create({ title: message, type: "error" });
     },
   });
+
+  return {
+    handleLogin,
+    isLoggingIn,
+  };
 }
 
 export function useRegister() {
   const router = useRouter();
 
-  return useMutation({
-    mutationFn: async (data: IRegisterInput) => {
-      const response = await api.post("/user", data);
-      return response.data;
+  const { mutateAsync: handleRegister, isPending: isRegistering } = useMutation(
+    {
+      mutationKey: ["register"],
+      mutationFn: async (data: IRegisterInput) => {
+        const response = await api.post("/user", data);
+        return response.data;
+      },
+      onSuccess: () => {
+        toaster.create({
+          title: "Conta criada com sucesso! Faça login para continuar.",
+          type: "success",
+        });
+        router.push("/login");
+      },
+      onError: (error: unknown) => {
+        const message = extractErrorMessage(error, "Falha ao criar conta");
+        toaster.create({ title: message, type: "error" });
+      },
     },
-    onSuccess: () => {
-      router.push("/login");
-    },
-    onError: (error: unknown) => {
-      return extractErrorMessage(error, "Falha ao criar conta");
-    },
-  });
+  );
+
+  return {
+    handleRegister,
+    isRegistering,
+  };
 }
 
 export function useLogout() {

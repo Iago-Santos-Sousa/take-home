@@ -17,7 +17,6 @@ import {
   Badge,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import { AxiosError } from "axios";
 import { useExam } from "@/hooks/useExams";
 import { useCreateAppointment } from "@/hooks/useAppointments";
 import { toaster } from "@/components/ui/toaster";
@@ -28,8 +27,11 @@ interface Props {
 
 export default function ExamDetailClient({ examId }: Props) {
   const router = useRouter();
+
   const { data: exam, isLoading, isError } = useExam(examId);
-  const createAppointment = useCreateAppointment();
+
+  const { handleCreateAppointment, isCreatingAppointment } =
+    useCreateAppointment();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [scheduledAt, setScheduledAt] = useState("");
@@ -39,39 +41,26 @@ export default function ExamDetailClient({ examId }: Props) {
   minDateTime.setMinutes(minDateTime.getMinutes() + 30);
   const minDateTimeStr = minDateTime.toISOString().slice(0, 16);
 
-  const handleSchedule = () => {
+  const handleSchedule = async () => {
     if (!scheduledAt) {
       toaster.create({ title: "Selecione uma data e horário", type: "error" });
       return;
     }
 
-    createAppointment.mutate(
-      {
+    try {
+      await handleCreateAppointment({
         exam_id: examId,
         scheduled_at: new Date(scheduledAt).toISOString(),
         notes: notes || undefined,
-      },
-      {
-        onSuccess: () => {
-          toaster.create({
-            title: "Agendamento criado com sucesso!",
-            type: "success",
-          });
-          setIsDialogOpen(false);
-          setScheduledAt("");
-          setNotes("");
-          router.push("/appointments");
-        },
-        onError: (error: unknown) => {
-          const message =
-            error instanceof AxiosError
-              ? ((error.response?.data as { message?: string })?.message ??
-                "Erro ao criar agendamento")
-              : "Erro ao criar agendamento";
-          toaster.create({ title: message, type: "error" });
-        },
-      },
-    );
+      });
+
+      setIsDialogOpen(false);
+      setScheduledAt("");
+      setNotes("");
+      router.push("/appointments");
+    } catch (error) {
+      console.error("Erro ao criar agendamento:", error);
+    }
   };
 
   if (isLoading) {
@@ -225,7 +214,7 @@ export default function ExamDetailClient({ examId }: Props) {
                   </Dialog.CloseTrigger>
                   <Button
                     colorPalette="blue"
-                    loading={createAppointment.isPending}
+                    loading={isCreatingAppointment}
                     loadingText="Agendando..."
                     onClick={handleSchedule}
                   >

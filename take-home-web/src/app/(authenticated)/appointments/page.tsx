@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Badge,
   Box,
   Button,
   Field,
@@ -14,87 +13,20 @@ import {
   Text,
   Dialog,
 } from "@chakra-ui/react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useState } from "react";
-import { AxiosError } from "axios";
 import { useAppointments, useUpdateAppointment } from "@/hooks/useAppointments";
 import { toaster } from "@/components/ui/toaster";
 import type { IAppointment } from "@/types/appointment";
-import { STATUS_COLORS, STATUS_LABELS } from "@/types/appointment";
-
-function AppointmentCard({
-  appointment,
-  onEdit,
-}: {
-  appointment: IAppointment;
-  onEdit: (a: IAppointment) => void;
-}) {
-  const isPast = new Date(appointment.scheduled_at) < new Date();
-
-  return (
-    <Box
-      bg="white"
-      rounded="xl"
-      shadow="sm"
-      p={5}
-      borderWidth="1px"
-      borderColor="gray.200"
-      opacity={appointment.status === "cancelled" ? 0.6 : 1}
-    >
-      <Stack gap={3}>
-        <HStack justify="space-between" align="start" flexWrap="wrap" gap={2}>
-          <Heading size="sm" color="gray.800">
-            {appointment.exam?.name ?? `Exame #${appointment.exam_id}`}
-          </Heading>
-          <Badge colorPalette={STATUS_COLORS[appointment.status]} size="sm">
-            {STATUS_LABELS[appointment.status]}
-          </Badge>
-        </HStack>
-
-        <Stack gap={1}>
-          <HStack gap={2} fontSize="sm">
-            <Text color="gray.500">📅 Data:</Text>
-            <Text fontWeight="medium">
-              {format(
-                new Date(appointment.scheduled_at),
-                "dd 'de' MMMM 'de' yyyy 'às' HH:mm",
-                { locale: ptBR },
-              )}
-            </Text>
-          </HStack>
-          {appointment.notes && (
-            <HStack gap={2} fontSize="sm" align="start">
-              <Text color="gray.500" flexShrink={0}>
-                📝 Obs:
-              </Text>
-              <Text color="gray.600">{appointment.notes}</Text>
-            </HStack>
-          )}
-        </Stack>
-
-        {appointment.status !== "cancelled" && !isPast && (
-          <Button
-            size="sm"
-            variant="outline"
-            colorPalette="blue"
-            onClick={() => onEdit(appointment)}
-            alignSelf="flex-start"
-          >
-            Editar
-          </Button>
-        )}
-      </Stack>
-    </Box>
-  );
-}
+import AppointmentCard from "@/components/AppointmentCard";
 
 export default function AppointmentsPage() {
   const { data: appointments, isLoading, isError } = useAppointments();
-  const updateAppointment = useUpdateAppointment();
+  const { handleUpdateAppointment, isUpdatingAppointment } =
+    useUpdateAppointment();
 
   const [editingAppointment, setEditingAppointment] =
     useState<IAppointment | null>(null);
+
   const [newScheduledAt, setNewScheduledAt] = useState("");
 
   const minDateTime = new Date();
@@ -104,53 +36,40 @@ export default function AppointmentsPage() {
   const openEdit = (appointment: IAppointment) => {
     setEditingAppointment(appointment);
     const d = new Date(appointment.scheduled_at);
+
     setNewScheduledAt(
       `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
     );
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!editingAppointment || !newScheduledAt) return;
 
-    updateAppointment.mutate(
-      {
+    try {
+      await handleUpdateAppointment({
         id: editingAppointment.appointment_id,
         data: { scheduled_at: new Date(newScheduledAt).toISOString() },
-      },
-      {
-        onSuccess: () => {
-          toaster.create({
-            title: "Agendamento atualizado!",
-            type: "success",
-          });
-          setEditingAppointment(null);
-        },
-        onError: (error: unknown) => {
-          const message =
-            error instanceof AxiosError
-              ? ((error.response?.data as { message?: string })?.message ??
-                "Erro ao atualizar")
-              : "Erro ao atualizar";
-          toaster.create({ title: message, type: "error" });
-        },
-      },
-    );
+      });
+
+      setEditingAppointment(null);
+    } catch (error) {
+      console.error("Erro ao atualizar agendamento:", error);
+    }
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (!editingAppointment) return;
-    updateAppointment.mutate(
-      {
+    try {
+      await handleUpdateAppointment({
         id: editingAppointment.appointment_id,
         data: { status: "cancelled" },
-      },
-      {
-        onSuccess: () => {
-          toaster.create({ title: "Agendamento cancelado", type: "info" });
-          setEditingAppointment(null);
-        },
-      },
-    );
+      });
+
+      toaster.create({ title: "Agendamento cancelado", type: "info" });
+      setEditingAppointment(null);
+    } catch (error) {
+      console.error("Erro ao cancelar agendamento:", error);
+    }
   };
 
   return (
@@ -201,7 +120,6 @@ export default function AppointmentsPage() {
         ))}
       </Stack>
 
-      {/* Edit Dialog */}
       <Dialog.Root
         open={!!editingAppointment}
         onOpenChange={(e) => !e.open && setEditingAppointment(null)}
@@ -230,7 +148,7 @@ export default function AppointmentsPage() {
                     variant="outline"
                     colorPalette="red"
                     size="sm"
-                    loading={updateAppointment.isPending}
+                    loading={isUpdatingAppointment}
                     onClick={handleCancel}
                   >
                     Cancelar agendamento
@@ -244,7 +162,7 @@ export default function AppointmentsPage() {
                     <Button
                       colorPalette="blue"
                       size="sm"
-                      loading={updateAppointment.isPending}
+                      loading={isUpdatingAppointment}
                       loadingText="Salvando..."
                       onClick={handleUpdate}
                     >

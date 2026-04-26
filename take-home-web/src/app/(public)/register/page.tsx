@@ -13,9 +13,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import Link from "next/link";
-import { AxiosError } from "axios";
 import { useRegister } from "@/hooks/useAuth";
-import { toaster } from "@/components/ui/toaster";
 
 const registerSchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -26,7 +24,7 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
-  const register_ = useRegister();
+  const { handleRegister, isRegistering } = useRegister();
 
   const {
     register,
@@ -37,25 +35,7 @@ export default function RegisterPage() {
   });
 
   const onSubmit = (data: RegisterForm) => {
-    register_.mutate(
-      { ...data, role: "user" },
-      {
-        onSuccess: () => {
-          toaster.create({
-            title: "Conta criada com sucesso! Faça login para continuar.",
-            type: "success",
-          });
-        },
-        onError: (error: unknown) => {
-          const message =
-            error instanceof AxiosError
-              ? ((error.response?.data as { message?: string })?.message ??
-                "Erro ao criar conta")
-              : "Erro ao criar conta";
-          toaster.create({ title: message, type: "error" });
-        },
-      },
-    );
+    handleRegister({ ...data, role: "user" });
   };
 
   return (
@@ -190,7 +170,7 @@ export default function RegisterPage() {
               <Button
                 type="submit"
                 w="full"
-                loading={register_.isPending}
+                loading={isRegistering}
                 loadingText="Criando conta..."
                 style={{
                   background: "linear-gradient(135deg, #2563eb, #1d4ed8)",

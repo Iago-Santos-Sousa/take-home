@@ -1,15 +1,9 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import { IUser } from "@/types/user";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: "admin" | "user";
-}
-
-async function getCurrentUser(): Promise<User | null> {
+async function getCurrentUser(): Promise<IUser | null> {
   const headerStore = await headers();
   const id = headerStore.get("x-user-id");
   if (!id) return null;
@@ -18,7 +12,7 @@ async function getCurrentUser(): Promise<User | null> {
     id,
     name: headerStore.get("x-user-name") ?? "",
     email: headerStore.get("x-user-email") ?? "",
-    role: (headerStore.get("x-user-role") as User["role"]) ?? "user",
+    role: (headerStore.get("x-user-role") as IUser["role"]) ?? "user",
   };
 }
 

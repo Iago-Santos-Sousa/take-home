@@ -47,7 +47,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres123
       DB_SCHEMA: take-home
-      DB_SYNCHRONIZE: "true"
+      DB_SYNCHRONIZE: "false"
       REDIS_URL: redis://redis:6379
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       JWT_REFRESH_SECRET: your-super-secret-refresh-key-change-in-production

@@ -40,7 +40,7 @@ A migration `1700000000001-SeedUsers.ts` insere dois usuários de teste. Utilize
 - DB_PORT=5432
 - DB_USER=postgres
 - DB_PASSWORD=postgres123
-- DB_SCHEMA=take-home
+- DB_SCHEMA=takehome
 - DB_SYNCHRONIZE=false
 - REDIS_URL=redis://localhost:6379
 - JWT_SECRET=...

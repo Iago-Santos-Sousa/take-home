@@ -26,6 +26,28 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Seed Credentials
+
+A migration `1700000000001-SeedUsers.ts` insere dois usuários de teste no banco. Utilize as credenciais abaixo para autenticação:
+
+| Nome            | E-mail                     | Senha     | Perfil |
+| --------------- | -------------------------- | --------- | ------ |
+| Luana Klein     | luana.klein@clinic.com     | senha@123 | user   |
+| Gabriel Feitosa | gabriel.feitosa@clinic.com | senha@123 | admin  |
+
+> **Atenção**: altere as senhas após o primeiro login em ambientes de produção.
+
+## API Documentation (Swagger)
+
+Com a API em execucao, acesse:
+
+- Local: http://localhost:8080/docs
+
+Observacoes:
+
+- O prefixo global da API e `/api` para endpoints de negocio.
+- O Swagger foi exposto em `/docs`.
+
 ## Project setup
 
 ```bash

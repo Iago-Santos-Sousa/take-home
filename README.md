@@ -22,6 +22,15 @@ Serviços:
 - PostgreSQL: localhost:5432
 - Redis: localhost:6379
 
+## Credenciais de Seed
+
+A migration `1700000000001-SeedUsers.ts` insere dois usuários de teste. Utilize as credenciais abaixo para autenticação:
+
+| Nome            | E-mail                       | Senha       | Perfil |
+| --------------- | ---------------------------- | ----------- | ------ |
+| Luana Klein     | luana.klein@takehome.com     | Luana@123   | user   |
+| Gabriel Feitosa | gabriel.feitosa@takehome.com | Gabriel@123 | admin  |
+
 ## Variáveis de ambiente
 
 ### API (take-home-api/.env)

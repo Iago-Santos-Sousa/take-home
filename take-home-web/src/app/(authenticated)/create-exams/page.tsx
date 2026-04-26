@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { FiPlusCircle } from "react-icons/fi";
 import { useCreateExam } from "@/hooks/useExams";
 import FormInput from "@/components/form/FormInput";

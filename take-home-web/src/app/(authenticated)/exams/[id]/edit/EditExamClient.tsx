@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { FiArrowLeft, FiSave } from "react-icons/fi";
 import { useExam, useUpdateExam } from "@/hooks/useExams";

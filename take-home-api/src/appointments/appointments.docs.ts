@@ -19,6 +19,23 @@ export const CreateAppointmentDocs = () => {
       description: "Appointment created successfully",
       schema: {
         type: "object",
+        example: {
+          message: "Appointment created successfully",
+          data: {
+            appointment_id: 1,
+            user_id: 2,
+            exam_id: 1,
+            scheduled_at: "2026-05-01T14:00:00.000Z",
+            status: "pending",
+            notes: "Paciente com historico de diabetes",
+            created_at: "2026-04-26T12:00:00.000Z",
+            updated_at: "2026-04-26T12:00:00.000Z",
+            exam: {
+              exam_id: 1,
+              name: "Hemograma Completo",
+            },
+          },
+        },
         properties: {
           message: {
             type: "string",
@@ -48,6 +65,35 @@ export const GetAppointmentsDocs = () => {
       description: "Appointments retrieved successfully",
       schema: {
         type: "object",
+        example: {
+          message: "Appointments retrieved successfully",
+          data: {
+            data: [
+              {
+                appointment_id: 1,
+                user_id: 2,
+                exam_id: 1,
+                scheduled_at: "2026-05-01T14:00:00.000Z",
+                status: "pending",
+                notes: "Paciente com historico de diabetes",
+                created_at: "2026-04-26T12:00:00.000Z",
+                updated_at: "2026-04-26T12:00:00.000Z",
+                exam: {
+                  exam_id: 1,
+                  name: "Hemograma Completo",
+                },
+              },
+            ],
+            meta: {
+              page: 1,
+              take: 10,
+              itemCount: 1,
+              pageCount: 1,
+              hasPreviousPage: false,
+              hasNextPage: false,
+            },
+          },
+        },
         properties: {
           message: {
             type: "string",
@@ -87,6 +133,23 @@ export const UpdateAppointmentDocs = () => {
       description: "Appointment updated successfully",
       schema: {
         type: "object",
+        example: {
+          message: "Appointment updated successfully",
+          data: {
+            appointment_id: 1,
+            user_id: 2,
+            exam_id: 1,
+            scheduled_at: "2026-05-01T15:00:00.000Z",
+            status: "confirmed",
+            notes: "Horario ajustado",
+            created_at: "2026-04-26T12:00:00.000Z",
+            updated_at: "2026-04-26T12:20:00.000Z",
+            exam: {
+              exam_id: 1,
+              name: "Hemograma Completo",
+            },
+          },
+        },
         properties: {
           message: {
             type: "string",

@@ -6,10 +6,11 @@ import { AppointmentPageOptionsDto } from "./dto/appointment-page-options.dto";
 
 describe("AppointmentsController", () => {
   let controller: AppointmentsController;
+  const findAllByUserMock = jest.fn();
 
   const appointmentsServiceMock = {
-    findAllByUser: jest.fn(),
-  } as unknown as AppointmentsService;
+    findAllByUser: findAllByUserMock,
+  } satisfies Pick<AppointmentsService, "findAllByUser">;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -37,9 +38,7 @@ describe("AppointmentsController", () => {
       },
     };
 
-    (appointmentsServiceMock.findAllByUser as jest.Mock).mockResolvedValue(
-      pageResult,
-    );
+    findAllByUserMock.mockResolvedValue(pageResult);
 
     const pageOptions = Object.assign(new AppointmentPageOptionsDto(), {
       page: 1,
@@ -52,7 +51,7 @@ describe("AppointmentsController", () => {
       pageOptions,
     );
 
-    expect(appointmentsServiceMock.findAllByUser).toHaveBeenCalledWith(1, {
+    expect(findAllByUserMock).toHaveBeenCalledWith(1, {
       page: 1,
       take: 10,
       order: Order.ASC,

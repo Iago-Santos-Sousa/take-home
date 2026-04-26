@@ -7,10 +7,8 @@ import {
   Param,
   Query,
   ParseIntPipe,
-  UseInterceptors,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { CacheInterceptor, CacheTTL } from "@nestjs/cache-manager";
 import { ExamsService } from "./exams.service";
 import { CreateExamDto } from "./dto/create-exam.dto";
 import { UpdateExamDto } from "./dto/update-exam.dto";
@@ -41,8 +39,6 @@ export class ExamsController {
 
   @Get()
   @Public()
-  @UseInterceptors(CacheInterceptor)
-  @CacheTTL(300000)
   @GetAllExamsDocs()
   async findAll(@Query() pageOptionsDto: ExamPageOptionsDto) {
     return this.examsService.findAll(pageOptionsDto);

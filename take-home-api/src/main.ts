@@ -7,6 +7,8 @@ import {
   SwaggerDocumentOptions,
 } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
+import { Exam } from "./exams/entities/exam.entity";
+import { Appointment } from "./appointments/entities/appointment.entity";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -55,6 +57,7 @@ async function bootstrap() {
   const options: SwaggerDocumentOptions = {
     operationIdFactory: (_controllerKey: string, methodKey: string) =>
       methodKey,
+    extraModels: [Exam, Appointment],
   };
 
   const document = SwaggerModule.createDocument(app, config, options);

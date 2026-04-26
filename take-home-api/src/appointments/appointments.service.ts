@@ -27,11 +27,43 @@ import { AppointmentPageOptionsDto } from "./dto/appointment-page-options.dto";
 
 @Injectable()
 export class AppointmentsService {
+  private readonly cacheTtlMs = 5 * 60 * 1000;
+
   constructor(
     private readonly appointmentRepository: AppointmentsRepository,
     private readonly examsService: ExamsService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
+
+  private getAppointmentsCacheIndexKey(userId: number): string {
+    return `appointments:user:${userId}:cache-keys`;
+  }
+
+  private async registerAppointmentsCacheKey(
+    userId: number,
+    cacheKey: string,
+  ): Promise<void> {
+    const indexKey = this.getAppointmentsCacheIndexKey(userId);
+    const cachedKeys = (await this.cacheManager.get<string[]>(indexKey)) ?? [];
+
+    if (!cachedKeys.includes(cacheKey)) {
+      cachedKeys.push(cacheKey);
+      await this.cacheManager.set(indexKey, cachedKeys, this.cacheTtlMs);
+    }
+  }
+
+  private async invalidateAppointmentsCacheByUser(
+    userId: number,
+  ): Promise<void> {
+    const indexKey = this.getAppointmentsCacheIndexKey(userId);
+    const cachedKeys = (await this.cacheManager.get<string[]>(indexKey)) ?? [];
+
+    for (const key of cachedKeys) {
+      await this.cacheManager.del(key);
+    }
+
+    await this.cacheManager.del(indexKey);
+  }
 
   private getExamDurationMinutes(duration?: number): number {
     return duration && duration > 0 ? duration : 60;
@@ -82,14 +114,16 @@ export class AppointmentsService {
       typeof scheduledAt === "string" ? parseISO(scheduledAt) : scheduledAt;
 
     const end = addMinutes(start, durationMinutes);
+    const dayStart: Date = startOfDay(start);
+    const dayEnd: Date = endOfDay(start);
 
     const queryBuilder = this.appointmentRepository
       .createQueryBuilder("appointment")
       .leftJoinAndSelect("appointment.exam", "exam")
       .where("appointment.user_id = :userId", { userId })
       .andWhere("appointment.scheduled_at BETWEEN :dayStart AND :dayEnd", {
-        dayStart: startOfDay(start),
-        dayEnd: endOfDay(start),
+        dayStart,
+        dayEnd,
       })
       .andWhere("appointment.status != :cancelled", { cancelled: "cancelled" });
 
@@ -148,7 +182,7 @@ export class AppointmentsService {
     });
 
     const saved = await this.appointmentRepository.save(appointment);
-    await this.cacheManager.clear();
+    await this.invalidateAppointmentsCacheByUser(userId);
     return saved;
   }
 
@@ -185,7 +219,8 @@ export class AppointmentsService {
 
     const pageMetaDto = new PageMetaDto({ pageOptionsDto, itemCount });
     const page = new PageDto(entities, pageMetaDto);
-    await this.cacheManager.set(cacheKey, page, 5 * 60 * 1000);
+    await this.cacheManager.set(cacheKey, page, this.cacheTtlMs);
+    await this.registerAppointmentsCacheKey(userId, cacheKey);
     return page;
   }
 
@@ -241,7 +276,7 @@ export class AppointmentsService {
     }
 
     const saved = await this.appointmentRepository.save(appointment);
-    await this.cacheManager.clear();
+    await this.invalidateAppointmentsCacheByUser(userId);
     return saved;
   }
 }

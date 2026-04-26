@@ -17,12 +17,18 @@ import { SignInDto } from "./dto/signin.dto";
 import { Public } from "@/common/decorators/skipAuth.decorator";
 import { LogoutDocs, RefreshTokenDocs, SignInDocs } from "./auth.docs";
 
-const COOKIE_OPTIONS = (maxAge: number) => ({
+// Cookie lifetimes são DESACOPLADOS da expiração do JWT.
+// O JWT controla a validade da sessão; o cookie é apenas o transporte.
+// access_token cookie dura mais que o JWT para que o middleware possa
+// decodificá-lo e o interceptor do front-end acione o refresh transparente.
+const ACCESS_TOKEN_COOKIE_MS = 20 * 60 * 1000; // 20 min (margem após JWT de 15min expirar)
+const REFRESH_TOKEN_COOKIE_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias (alinhado com JWT_REFRESH_EXPIRES)
+
+const COOKIE_BASE = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
-  maxAge,
-});
+};
 
 @ApiTags("Auth")
 @Controller("auth")
@@ -42,16 +48,15 @@ export class AuthController {
       signInDto.password,
     );
 
-    res.cookie(
-      "access_token",
-      result.access_token,
-      COOKIE_OPTIONS(30 * 60 * 1000),
-    );
-    res.cookie(
-      "refresh_token",
-      result.refresh_token,
-      COOKIE_OPTIONS(45 * 60 * 1000),
-    );
+    res.cookie("access_token", result.access_token, {
+      ...COOKIE_BASE,
+      maxAge: ACCESS_TOKEN_COOKIE_MS,
+    });
+
+    res.cookie("refresh_token", result.refresh_token, {
+      ...COOKIE_BASE,
+      maxAge: REFRESH_TOKEN_COOKIE_MS,
+    });
 
     return {
       message: "Login realizado com sucesso",
@@ -80,16 +85,15 @@ export class AuthController {
 
     const result = await this.authService.refreshToken(refreshToken);
 
-    res.cookie(
-      "access_token",
-      result.access_token,
-      COOKIE_OPTIONS(30 * 60 * 1000),
-    );
-    res.cookie(
-      "refresh_token",
-      result.refresh_token,
-      COOKIE_OPTIONS(45 * 60 * 1000),
-    );
+    res.cookie("access_token", result.access_token, {
+      ...COOKIE_BASE,
+      maxAge: ACCESS_TOKEN_COOKIE_MS,
+    });
+
+    res.cookie("refresh_token", result.refresh_token, {
+      ...COOKIE_BASE,
+      maxAge: REFRESH_TOKEN_COOKIE_MS,
+    });
 
     return {
       message: "Token renovado com sucesso",
@@ -99,6 +103,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post("logout")
   @HttpCode(HttpStatus.OK)
   @LogoutDocs()

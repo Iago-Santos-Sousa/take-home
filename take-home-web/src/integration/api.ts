@@ -9,6 +9,9 @@ export const api = axios.create({
   withCredentials: true,
 });
 
+let isRefreshing = false;
+let refreshPromise: Promise<void> | null = null;
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -27,25 +30,53 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      error = new HttpUnauthorizedError(
-        "Acesso não autorizado. Por favor, faça login para continuar.",
-      ) as unknown as AxiosError;
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname === "/login"
+      ) {
+        error = new HttpUnauthorizedError(
+          "Credenciais inválidas",
+        ) as unknown as AxiosError;
+
+        return Promise.reject(error);
+      }
+
+      if (isRefreshing && refreshPromise) {
+        await refreshPromise;
+        return api(originalRequest);
+      }
+
+      isRefreshing = true;
+
+      refreshPromise = (async () => {
+        try {
+          await axios.post(
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`,
+            {},
+            { withCredentials: true },
+          );
+
+          isRefreshing = false;
+          refreshPromise = null;
+        } catch (refreshError) {
+          isRefreshing = false;
+          refreshPromise = null;
+
+          if (
+            typeof window !== "undefined" &&
+            window.location.pathname !== "/login"
+          ) {
+            window.location.href = "/login";
+          }
+          throw refreshError;
+        }
+      })();
 
       try {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`,
-          {},
-          { withCredentials: true },
-        );
-
+        await refreshPromise;
         return api(originalRequest);
       } catch {
-        if (
-          typeof window !== "undefined" &&
-          window.location.pathname !== "/login"
-        ) {
-          window.location.href = "/login";
-        }
+        return Promise.reject(error);
       }
     }
 

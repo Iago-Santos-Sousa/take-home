@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { decodeJWT, isTokenExpired } from "@/lib/jwt";
+import { decodeJWT } from "@/lib/jwt";
 
 const AUTHENTICATED_ROUTES = [
   "/dashboard",
@@ -30,7 +30,7 @@ export default function middleware(request: NextRequest) {
     if (token) {
       const payload = decodeJWT(token);
 
-      if (payload && !isTokenExpired(payload)) {
+      if (payload) {
         return NextResponse.redirect(new URL("/exams", request.url));
       }
     }
@@ -39,19 +39,23 @@ export default function middleware(request: NextRequest) {
   }
 
   if (isAuthenticatedRoute || isAdminRoute) {
-    if (!token) {
+    // Tenta decodificar o access_token primeiro
+    let payload = token ? decodeJWT(token) : null;
+
+    // Fallback: access_token ausente ou corrompido — tenta usar refresh_token
+    // para injetar os headers e deixar o interceptor do front-end acionar o refresh
+    if (!payload) {
+      const refreshToken = request.cookies.get("refresh_token")?.value;
+      if (refreshToken) {
+        payload = decodeJWT(refreshToken);
+      }
+    }
+
+    // Nenhum token válido — redireciona para login
+    if (!payload) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
-    }
-
-    const payload = decodeJWT(token);
-
-    // Token inválido ou expirado
-    if (!payload || isTokenExpired(payload)) {
-      const response = NextResponse.redirect(new URL("/login", request.url));
-      response.cookies.delete("access_token");
-      return response;
     }
 
     if (isAdminRoute && payload.roles?.[0] !== "admin") {

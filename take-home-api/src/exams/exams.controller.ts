@@ -14,7 +14,6 @@ import { CreateExamDto } from "./dto/create-exam.dto";
 import { UpdateExamDto } from "./dto/update-exam.dto";
 import { ExamPageOptionsDto } from "./dto/exam-page-options.dto";
 import { Roles } from "@/common/decorators/roles.decorator";
-import { Public } from "@/common/decorators/skipAuth.decorator";
 import { UserRole } from "@/utils/enums";
 import {
   CreateExamDocs,
@@ -38,14 +37,12 @@ export class ExamsController {
   }
 
   @Get()
-  @Public()
   @GetAllExamsDocs()
   async findAll(@Query() pageOptionsDto: ExamPageOptionsDto) {
     return this.examsService.findAll(pageOptionsDto);
   }
 
   @Get(":id")
-  @Public()
   @GetExamByIdDocs()
   async findOne(@Param("id", ParseIntPipe) id: number) {
     const exam = await this.examsService.findOne(id);

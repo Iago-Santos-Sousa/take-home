@@ -18,7 +18,7 @@ Serviços:
 
 - Web: http://localhost:3000
 - API: http://localhost:8080/api
-- Swagger: http://localhost:8080/api/docs
+- Swagger: http://localhost:8080/docs
 - PostgreSQL: localhost:5432
 - Redis: localhost:6379
 

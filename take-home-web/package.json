@@ -10,8 +10,6 @@
     "lint:fix": "eslint --fix"
   },
   "dependencies": {
-    "@chakra-ui/react": "^3.35.0",
-    "@emotion/react": "^11.14.0",
     "@hookform/resolvers": "^5.2.2",
     "@tanstack/react-query": "^5.100.1",
     "@tanstack/react-query-devtools": "^5.100.1",

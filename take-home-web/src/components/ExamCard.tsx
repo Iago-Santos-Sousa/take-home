@@ -41,7 +41,7 @@ export default function ExamCard({ exam }: { exam: IExam }) {
         )}
       </div>
 
-      <Link href={`/exams/${exam.exam_id}`}>
+      <Link href={`/exams/${exam.exam_id}`} className="mt-auto">
         <AppButton variant="outline" size="sm" className="w-full">
           Ver detalhes
         </AppButton>

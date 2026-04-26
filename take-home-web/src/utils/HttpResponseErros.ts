@@ -13,7 +13,9 @@ export class HttpInternalServerError extends Error {
 
   constructor(message?: string) {
     super();
-    this.message = message || "Internal server error";
+    this.message =
+      message ||
+      "Ops! Ocorreu um erro no servidor. Por favor, tente novamente mais tarde.";
     this.status = 500;
   }
 }
@@ -27,5 +29,16 @@ export class HttpTooManyRequestsError extends Error {
       message ||
       "Muitas tentativas. Por favor, aguarde um momento antes de tentar novamente.";
     this.status = 429;
+  }
+}
+
+export class HttpUnauthorizedError extends Error {
+  status: number;
+
+  constructor(message?: string) {
+    super();
+    this.message =
+      message || "Acesso não autorizado. Por favor, faça login para continuar.";
+    this.status = 401;
   }
 }

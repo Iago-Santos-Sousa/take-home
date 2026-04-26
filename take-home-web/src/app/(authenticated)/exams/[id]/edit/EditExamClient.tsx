@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -21,13 +21,13 @@ export default function EditExamClient({ examId }: Props) {
   const router = useRouter();
   const { data: exam, isLoading, isError } = useExam(examId);
   const { handleUpdateExam, isUpdatingExam } = useUpdateExam();
-  const [isActive, setIsActive] = useState(true);
 
   const {
     register,
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<ExamFormValues>({
     resolver: zodResolver(ExamSchema),
@@ -44,9 +44,6 @@ export default function EditExamClient({ examId }: Props) {
   useEffect(() => {
     if (!exam) return;
 
-    setIsActive(exam.is_active);
-    setValue("is_active", exam.is_active, { shouldValidate: true });
-
     reset({
       name: exam.name,
       description: exam.description ?? "",
@@ -60,7 +57,9 @@ export default function EditExamClient({ examId }: Props) {
           : "",
       is_active: exam.is_active,
     });
-  }, [exam, reset, setValue]);
+  }, [exam, reset]);
+
+  const isActive = watch("is_active");
 
   const onSubmit: SubmitHandler<ExamFormValues> = async (data) => {
     const payLoad = {
@@ -75,7 +74,7 @@ export default function EditExamClient({ examId }: Props) {
         price: data.price
           ? Number.parseFloat(data.price.replace(",", "."))
           : undefined,
-        is_active: isActive,
+        is_active: data.is_active,
       },
     };
 
@@ -193,7 +192,6 @@ export default function EditExamClient({ examId }: Props) {
               type="button"
               onClick={() => {
                 const next = !isActive;
-                setIsActive(next);
                 setValue("is_active", next, { shouldValidate: true });
               }}
               className={`relative w-11 h-6 rounded-full transition-colors ${

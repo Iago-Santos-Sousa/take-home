@@ -30,6 +30,7 @@ export function useExams(params: IUseExamsParams = {}) {
           take,
         },
       });
+
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 min — com Redis TTL
@@ -43,6 +44,7 @@ export function useExam(id: number) {
       const response = await api.get<{ message: string; data: IExam }>(
         `/exams/${id}`,
       );
+
       return response.data.data;
     },
     enabled: !!id,
@@ -60,6 +62,7 @@ export function useCreateExam() {
           "/exams",
           data,
         );
+
         return response.data.data;
       },
       onSuccess: () => {
@@ -101,6 +104,7 @@ export function useUpdateExam() {
           `/exams/${id}`,
           data,
         );
+
         return response.data.data;
       },
       onSuccess: (_data, variables) => {

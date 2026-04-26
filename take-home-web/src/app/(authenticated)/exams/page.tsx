@@ -8,39 +8,19 @@ import {
   Heading,
   HStack,
   Input,
-  Skeleton,
   Stack,
   Text,
 } from "@chakra-ui/react";
 import { useExams } from "@/hooks/useExams";
 import { useDebounce } from "@/hooks/useDebounce";
 import ExamCard from "@/components/ExamCard";
-
-function SkeletonCard() {
-  return (
-    <Box
-      bg="white"
-      rounded="xl"
-      shadow="sm"
-      p={5}
-      borderWidth="1px"
-      borderColor="gray.200"
-    >
-      <Stack gap={3}>
-        <Skeleton height="20px" />
-        <Skeleton height="14px" />
-        <Skeleton height="14px" width="60%" />
-        <Skeleton height="32px" />
-      </Stack>
-    </Box>
-  );
-}
+import SkeletonCard from "@/components/SkeletonCard";
 
 export default function ExamsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
   const search = useDebounce(searchInput, 400);
-  const TAKE = 12;
+  const TAKE = 8;
 
   const { data, isLoading, isError } = useExams({ search, page, take: TAKE });
 

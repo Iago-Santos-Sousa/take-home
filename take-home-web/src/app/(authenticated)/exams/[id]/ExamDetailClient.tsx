@@ -1,25 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Box,
-  Button,
-  Dialog,
-  Field,
-  Heading,
-  HStack,
-  Input,
-  Portal,
-  Skeleton,
-  Stack,
-  Text,
-  Textarea,
-  Badge,
-} from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useExam } from "@/hooks/useExams";
 import { useCreateAppointment } from "@/hooks/useAppointments";
-import { toaster } from "@/components/ui/toaster";
+import { useUser } from "@/contexts/user-context";
+import { validateBusinessHours } from "@/utils/validateBusinessHours";
+import AppButton from "@/components/ui/AppButton";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
+import {
+  FiArrowLeft,
+  FiCalendar,
+  FiClock,
+  FiEdit2,
+  FiFileText,
+} from "react-icons/fi";
 
 interface Props {
   examId: number;
@@ -27,9 +35,9 @@ interface Props {
 
 export default function ExamDetailClient({ examId }: Props) {
   const router = useRouter();
+  const { isAdmin } = useUser();
 
   const { data: exam, isLoading, isError } = useExam(examId);
-
   const { handleCreateAppointment, isCreatingAppointment } =
     useCreateAppointment();
 
@@ -43,7 +51,17 @@ export default function ExamDetailClient({ examId }: Props) {
 
   const handleSchedule = async () => {
     if (!scheduledAt) {
-      toaster.create({ title: "Selecione uma data e horário", type: "error" });
+      toast.error("Selecione uma data e horário");
+      return;
+    }
+
+    const businessHoursError = validateBusinessHours(
+      scheduledAt,
+      exam?.duration_minutes,
+    );
+
+    if (businessHoursError) {
+      toast.error(businessHoursError);
       return;
     }
 
@@ -65,167 +83,146 @@ export default function ExamDetailClient({ examId }: Props) {
 
   if (isLoading) {
     return (
-      <Stack gap={4} maxW="2xl">
-        <Skeleton height="36px" />
-        <Skeleton height="20px" />
-        <Skeleton height="20px" />
-        <Skeleton height="80px" />
-        <Skeleton height="40px" width="160px" />
-      </Stack>
+      <div className="flex flex-col gap-4 max-w-2xl">
+        <Skeleton className="h-9 w-48" />
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-3/4" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-10 w-40" />
+      </div>
     );
   }
 
   if (isError || !exam) {
     return (
-      <Box bg="red.50" p={6} rounded="lg" textAlign="center">
-        <Text color="red.600" fontSize="lg">
-          Exame não encontrado.
-        </Text>
-        <Button
-          mt={4}
+      <div className="bg-red-50 border border-red-200 p-6 rounded-xl text-center">
+        <p className="text-red-600 text-lg">Exame não encontrado.</p>
+        <AppButton
           variant="outline"
-          colorPalette="blue"
+          className="mt-4"
           onClick={() => router.back()}
         >
           Voltar
-        </Button>
-      </Box>
+        </AppButton>
+      </div>
     );
   }
 
   return (
-    <Stack gap={6} maxW="2xl">
-      <HStack gap={2}>
-        <Button variant="ghost" size="sm" onClick={() => router.back()}>
-          ← Voltar
-        </Button>
-      </HStack>
+    <div className="flex flex-col gap-6 max-w-2xl">
+      <div>
+        <AppButton variant="ghost" size="sm" onClick={() => router.back()}>
+          <FiArrowLeft /> Voltar
+        </AppButton>
+      </div>
 
-      <Box
-        bg="white"
-        rounded="xl"
-        shadow="sm"
-        p={6}
-        borderWidth="1px"
-        borderColor="gray.200"
-      >
-        <Stack gap={5}>
-          <HStack justify="space-between" align="start" flexWrap="wrap" gap={3}>
-            <Heading size="xl">{exam.name}</Heading>
+      <div className="bg-white rounded-xl shadow-sm border border-border p-6">
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <h1 className="text-2xl font-bold text-foreground">{exam.name}</h1>
             {exam.price !== undefined && exam.price !== null && (
-              <Badge colorPalette="green" fontSize="md" px={3} py={1}>
+              <Badge className="bg-green-100 text-green-800 border-green-200 text-sm px-3 py-1">
                 R$ {Number(exam.price).toFixed(2)}
               </Badge>
             )}
-          </HStack>
+          </div>
 
           {exam.duration_minutes && (
-            <HStack gap={2}>
-              <Text fontSize="sm" color="gray.500">
-                ⏱ Duração:
-              </Text>
-              <Text fontSize="sm" fontWeight="medium">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <FiClock />
+              <span>Duração:</span>
+              <span className="font-medium text-foreground">
                 {exam.duration_minutes} minutos
-              </Text>
-            </HStack>
+              </span>
+            </div>
           )}
 
           {exam.description && (
-            <Stack gap={1}>
-              <Text fontWeight="semibold" color="gray.700">
-                Sobre o exame
-              </Text>
-              <Text color="gray.600" fontSize="sm" lineHeight="tall">
+            <div className="flex flex-col gap-1">
+              <p className="font-semibold text-foreground">Sobre o exame</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 {exam.description}
-              </Text>
-            </Stack>
+              </p>
+            </div>
           )}
 
           {exam.preparation_instructions && (
-            <Box
-              bg="blue.50"
-              p={4}
-              rounded="lg"
-              borderWidth="1px"
-              borderColor="blue.200"
-            >
-              <Stack gap={2}>
-                <Text fontWeight="semibold" color="blue.700">
-                  📋 Instruções de preparo
-                </Text>
-                <Text color="blue.800" fontSize="sm" lineHeight="tall">
-                  {exam.preparation_instructions}
-                </Text>
-              </Stack>
-            </Box>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex flex-col gap-2">
+              <p className="font-semibold text-blue-700 flex items-center gap-1">
+                <FiFileText /> Instruções de preparo
+              </p>
+              <p className="text-sm text-blue-800 leading-relaxed">
+                {exam.preparation_instructions}
+              </p>
+            </div>
           )}
 
-          <Button
-            colorPalette="blue"
-            size="lg"
-            onClick={() => setIsDialogOpen(true)}
-            mt={2}
-          >
-            📅 Agendar este exame
-          </Button>
-        </Stack>
-      </Box>
+          <div className="flex flex-wrap gap-3 mt-2">
+            <AppButton size="lg" onClick={() => setIsDialogOpen(true)}>
+              <FiCalendar /> Agendar este exame
+            </AppButton>
+            {isAdmin && (
+              <AppButton
+                variant="outline"
+                size="lg"
+                onClick={() => router.push(`/exams/${examId}/edit`)}
+              >
+                <FiEdit2 /> Editar exame
+              </AppButton>
+            )}
+          </div>
+        </div>
+      </div>
 
-      {/* Modal de agendamento */}
-      <Dialog.Root
-        open={isDialogOpen}
-        onOpenChange={(e) => setIsDialogOpen(e.open)}
-      >
-        <Portal>
-          <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content maxW="md" p={6}>
-              <Stack gap={5}>
-                <Dialog.Title>
-                  <Heading size="md">Agendar: {exam.name}</Heading>
-                </Dialog.Title>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Agendar: {exam.name}</DialogTitle>
+          </DialogHeader>
 
-                <Field.Root required>
-                  <Field.Label>Data e Horário</Field.Label>
-                  <Input
-                    type="datetime-local"
-                    min={minDateTimeStr}
-                    value={scheduledAt}
-                    onChange={(e) => setScheduledAt(e.target.value)}
-                  />
-                  <Field.HelperText>
-                    Selecione uma data e horário futuros
-                  </Field.HelperText>
-                </Field.Root>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="scheduled-at">
+                Data e Horário <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="scheduled-at"
+                type="datetime-local"
+                min={minDateTimeStr}
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Horário comercial: 08:00 às 17:30. Duração considerada:{" "}
+                {exam.duration_minutes ?? 60} min.
+              </p>
+            </div>
 
-                <Field.Root>
-                  <Field.Label>Observações (opcional)</Field.Label>
-                  <Textarea
-                    placeholder="Ex: histórico de alergias, medicamentos em uso..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={3}
-                  />
-                </Field.Root>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="notes">Observações (opcional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Ex: histórico de alergias, medicamentos em uso..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
 
-                <HStack justify="flex-end" gap={3}>
-                  <Dialog.CloseTrigger asChild>
-                    <Button variant="ghost">Cancelar</Button>
-                  </Dialog.CloseTrigger>
-                  <Button
-                    colorPalette="blue"
-                    loading={isCreatingAppointment}
-                    loadingText="Agendando..."
-                    onClick={handleSchedule}
-                  >
-                    Confirmar agendamento
-                  </Button>
-                </HStack>
-              </Stack>
-            </Dialog.Content>
-          </Dialog.Positioner>
-        </Portal>
-      </Dialog.Root>
-    </Stack>
+          <DialogFooter>
+            <AppButton variant="ghost" onClick={() => setIsDialogOpen(false)}>
+              Cancelar
+            </AppButton>
+            <AppButton
+              disabled={isCreatingAppointment}
+              onClick={handleSchedule}
+            >
+              {isCreatingAppointment ? "Agendando..." : "Confirmar agendamento"}
+            </AppButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

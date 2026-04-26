@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import Navbar from "@/components/Navbar";
+import Navbar from "../../components/Navbar";
 import { IUser } from "@/types/user";
 
 async function getCurrentUser(): Promise<IUser | null> {
@@ -25,13 +25,9 @@ export default async function AuthenticatedLayout({
   if (!user) redirect("/login");
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f4ff" }}>
+    <div className="min-h-screen bg-sky-50">
       <Navbar userName={user.name} userRole={user.role} />
-      <main
-        style={{ maxWidth: "1280px", margin: "0 auto", padding: "32px 16px" }}
-      >
-        {children}
-      </main>
+      <main className="mx-auto max-w-7xl px-4 py-8">{children}</main>
     </div>
   );
 }

@@ -1,26 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Box,
-  Button,
-  Grid,
-  Heading,
-  HStack,
-  Input,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
 import { useExams } from "@/hooks/useExams";
 import { useDebounce } from "@/hooks/useDebounce";
 import ExamCard from "@/components/ExamCard";
 import SkeletonCard from "@/components/SkeletonCard";
+import { Input } from "@/components/ui/input";
+import AppButton from "@/components/ui/AppButton";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+const TAKE = 8;
 
 export default function ExamsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
   const search = useDebounce(searchInput, 400);
-  const TAKE = 8;
 
   const { data, isLoading, isError } = useExams({ search, page, take: TAKE });
 
@@ -30,82 +23,71 @@ export default function ExamsPage() {
   };
 
   return (
-    <Stack gap={6}>
-      <HStack justify="space-between" align="center" flexWrap="wrap" gap={3}>
-        <Stack gap={1}>
-          <Heading size="xl">Exames Disponíveis</Heading>
-          <Text color="gray.500" fontSize="sm">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold text-foreground">
+            Exames Disponíveis
+          </h1>
+          <p className="text-sm text-muted-foreground">
             {data?.meta.itemCount ?? 0} exames encontrados
-          </Text>
-        </Stack>
+          </p>
+        </div>
         <Input
           placeholder="Buscar exame por nome..."
           value={searchInput}
           onChange={handleSearchChange}
-          maxW="320px"
-          bg="white"
+          className="max-w-xs bg-white"
         />
-      </HStack>
+      </div>
 
       {isError && (
-        <Box
-          bg="red.50"
-          p={4}
-          rounded="lg"
-          borderWidth="1px"
-          borderColor="red.200"
-        >
-          <Text color="red.600">Erro ao carregar exames. Tente novamente.</Text>
-        </Box>
+        <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
+          <p className="text-red-600">
+            Erro ao carregar exames. Tente novamente.
+          </p>
+        </div>
       )}
 
-      <Grid
-        templateColumns={{
-          base: "1fr",
-          sm: "repeat(2, 1fr)",
-          lg: "repeat(3, 1fr)",
-          xl: "repeat(4, 1fr)",
-        }}
-        gap={4}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {isLoading
           ? Array.from({ length: TAKE }).map((_, i) => <SkeletonCard key={i} />)
           : data?.data.map((exam) => (
               <ExamCard key={exam.exam_id} exam={exam} />
             ))}
-      </Grid>
+      </div>
 
       {!isLoading && data?.data.length === 0 && (
-        <Box textAlign="center" py={16}>
-          <Text fontSize="lg" color="gray.400">
+        <div className="text-center py-16">
+          <p className="text-lg text-muted-foreground">
             Nenhum exame encontrado para &quot;{searchInput}&quot;
-          </Text>
-        </Box>
+          </p>
+        </div>
       )}
 
       {data && data.meta.pageCount > 1 && (
-        <HStack justify="center" gap={2} pt={4}>
-          <Button
+        <div className="flex items-center justify-center gap-2 pt-4">
+          <AppButton
             variant="outline"
             size="sm"
             disabled={!data.meta.hasPreviousPage}
             onClick={() => setPage((p) => p - 1)}
           >
-            ← Anterior
-          </Button>
-          <Text fontSize="sm" color="gray.600">
+            <FiChevronLeft /> Anterior
+          </AppButton>
+          <span className="text-sm text-muted-foreground">
             Página {data.meta.page} de {data.meta.pageCount}
-          </Text>
-          <Button
+          </span>
+          <AppButton
             variant="outline"
             size="sm"
             disabled={!data.meta.hasNextPage}
             onClick={() => setPage((p) => p + 1)}
           >
-            Próxima →
-          </Button>
-        </HStack>
+            Próxima <FiChevronRight />
+          </AppButton>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 }

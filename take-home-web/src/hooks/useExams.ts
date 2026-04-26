@@ -8,7 +8,7 @@ import type {
   ICreateExamInput,
   IUpdateExamInput,
 } from "@/types/exam";
-import { toaster } from "@/components/ui/toaster";
+import { toast } from "sonner";
 import { extractErrorMessage } from "@/utils/extractErrorMessage";
 
 interface IUseExamsParams {
@@ -67,17 +67,14 @@ export function useCreateExam() {
       },
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey: ["exams"] });
-        toaster.create({
-          title: "Exame criado com sucesso!",
-          type: "success",
-        });
+        toast.success("Exame criado com sucesso!");
       },
       onError: (error: unknown) => {
         const message = extractErrorMessage(
           error,
           "Erro ao criar o exame. Tente novamente.",
         );
-        toaster.create({ title: message, type: "error" });
+        toast.error(message);
       },
     });
 
@@ -118,7 +115,7 @@ export function useUpdateExam() {
           error,
           "Erro ao atualizar o exame. Tente novamente.",
         );
-        toaster.create({ title: message, type: "error" });
+        toast.error(message);
       },
     });
 

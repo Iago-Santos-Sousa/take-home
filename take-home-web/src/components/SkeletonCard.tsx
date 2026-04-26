@@ -1,23 +1,12 @@
-"use client";
-
-import { Box, Skeleton, Stack } from "@chakra-ui/react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SkeletonCard() {
   return (
-    <Box
-      bg="white"
-      rounded="xl"
-      shadow="sm"
-      p={5}
-      borderWidth="1px"
-      borderColor="gray.200"
-    >
-      <Stack gap={3}>
-        <Skeleton height="20px" />
-        <Skeleton height="14px" />
-        <Skeleton height="14px" width="60%" />
-        <Skeleton height="32px" />
-      </Stack>
-    </Box>
+    <div className="bg-white rounded-xl shadow-sm border border-border p-5 flex flex-col gap-3">
+      <Skeleton className="h-5 w-full" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-3/5" />
+      <Skeleton className="h-8 w-full" />
+    </div>
   );
 }

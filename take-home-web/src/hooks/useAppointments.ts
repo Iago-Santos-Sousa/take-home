@@ -4,23 +4,39 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/integration/api";
 import type {
   IAppointment,
+  IAppointmentsPageResponse,
   ICreateAppointmentInput,
   IUpdateAppointmentInput,
 } from "@/types/appointment";
-import { toaster } from "@/components/ui/toaster";
+import { toast } from "sonner";
 import { extractErrorMessage } from "@/utils/extractErrorMessage";
 
-export function useAppointments() {
-  return useQuery<IAppointment[]>({
-    queryKey: ["appointments"],
+interface IUseAppointmentsParams {
+  page?: number;
+  take?: number;
+  status?: "pending" | "confirmed" | "cancelled";
+}
+
+export function useAppointments(params: IUseAppointmentsParams = {}) {
+  const { page = 1, take = 10, status } = params;
+
+  return useQuery<IAppointmentsPageResponse>({
+    queryKey: ["appointments", { page, take, status }],
     queryFn: async () => {
       const response = await api.get<{
         message: string;
-        data: IAppointment[];
-      }>("/appointments");
+        data: IAppointmentsPageResponse;
+      }>("/appointments", {
+        params: {
+          page,
+          take,
+          status,
+        },
+      });
 
       return response.data.data;
     },
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -41,17 +57,14 @@ export function useCreateAppointment() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      toaster.create({
-        title: "Agendamento criado com sucesso!",
-        type: "success",
-      });
+      toast.success("Agendamento criado com sucesso!");
     },
     onError: (error: unknown) => {
       const message = extractErrorMessage(
         error,
         "Erro ao criar o agendamento. Tente novamente.",
       );
-      toaster.create({ title: message, type: "error" });
+      toast.error(message);
     },
   });
 
@@ -84,17 +97,14 @@ export function useUpdateAppointment() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      toaster.create({
-        title: "Agendamento atualizado com sucesso!",
-        type: "success",
-      });
+      toast.success("Agendamento atualizado com sucesso!");
     },
     onError: (error: unknown) => {
       const message = extractErrorMessage(
         error,
         "Erro ao atualizar o agendamento. Tente novamente.",
       );
-      toaster.create({ title: message, type: "error" });
+      toast.error(message);
     },
   });
 

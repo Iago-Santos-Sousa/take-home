@@ -26,14 +26,29 @@ export interface IUpdateAppointmentInput {
   status?: TAppointmentStatus;
 }
 
+export interface IAppointmentPageMeta {
+  page: number;
+  take: number;
+  itemCount: number;
+  pageCount: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface IAppointmentsPageResponse {
+  data: IAppointment[];
+  meta: IAppointmentPageMeta;
+}
+
 export const STATUS_LABELS: Record<TAppointmentStatus, string> = {
   pending: "Pendente",
   confirmed: "Confirmado",
   cancelled: "Cancelado",
 };
 
+/** Tailwind className strings para o Badge do ShadCN */
 export const STATUS_COLORS: Record<TAppointmentStatus, string> = {
-  pending: "yellow",
-  confirmed: "green",
-  cancelled: "red",
+  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  confirmed: "bg-green-100 text-green-800 border-green-200",
+  cancelled: "bg-red-100 text-red-800 border-red-200",
 };

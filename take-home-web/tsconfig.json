@@ -20,8 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@chakra-ui/react": ["../../packages/react/src"]
+      "@/components/*": ["./src/components/*"]
     }
   },
   "include": [

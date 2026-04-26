@@ -12,6 +12,7 @@ async function fetchExam(id: string): Promise<IExam | null> {
     const response = await axios.get<{ data: IExam }>(
       `${process.env.NEXT_PUBLIC_API_URL}/exams/${id}`,
     );
+
     return response.data.data;
   } catch {
     return null;

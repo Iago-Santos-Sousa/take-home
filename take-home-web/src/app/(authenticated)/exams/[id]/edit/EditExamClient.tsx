@@ -1,20 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { FiPlusCircle } from "react-icons/fi";
-import { useCreateExam } from "@/hooks/useExams";
+import { useRouter } from "next/navigation";
+import { FiArrowLeft, FiSave } from "react-icons/fi";
+import { useExam, useUpdateExam } from "@/hooks/useExams";
+import { toast } from "sonner";
 import FormInput from "@/components/form/FormInput";
 import FormTextarea from "@/components/form/FormTextarea";
 import AppButton from "@/components/ui/AppButton";
-
 import { ExamSchema } from "@/schemas/exam";
 import { ExamFormValues } from "@/schemas/exam";
 
-export default function CreateExamsPage() {
-  const { handleCreateExam, isCreatingExam } = useCreateExam();
+interface Props {
+  examId: number;
+}
+
+export default function EditExamClient({ examId }: Props) {
+  const router = useRouter();
+  const { data: exam, isLoading, isError } = useExam(examId);
+  const { handleUpdateExam, isUpdatingExam } = useUpdateExam();
   const [isActive, setIsActive] = useState(true);
 
   const {
@@ -26,55 +33,101 @@ export default function CreateExamsPage() {
   } = useForm<ExamFormValues>({
     resolver: zodResolver(ExamSchema),
     defaultValues: {
-      is_active: true,
       name: "",
       description: "",
       preparation_instructions: "",
       duration_minutes: "",
       price: "",
+      is_active: true,
     },
   });
 
-  const onSubmit: SubmitHandler<ExamFormValues> = async (data) => {
-    const payload = {
-      name: data.name,
-      description: data.description || undefined,
-      preparation_instructions: data.preparation_instructions || undefined,
-      duration_minutes: data.duration_minutes
-        ? Number.parseInt(data.duration_minutes, 10)
-        : undefined,
-      price: data.price
-        ? Number.parseFloat(data.price.replace(",", "."))
-        : undefined,
-      is_active: isActive,
-    };
+  useEffect(() => {
+    if (!exam) return;
 
-    await handleCreateExam(payload);
+    setIsActive(exam.is_active);
+    setValue("is_active", exam.is_active, { shouldValidate: true });
 
     reset({
-      name: "",
-      description: "",
-      preparation_instructions: "",
-      duration_minutes: "",
-      price: "",
-      is_active: true,
+      name: exam.name,
+      description: exam.description ?? "",
+      preparation_instructions: exam.preparation_instructions ?? "",
+      duration_minutes: exam.duration_minutes
+        ? String(exam.duration_minutes)
+        : "",
+      price:
+        exam.price !== undefined && exam.price !== null
+          ? Number(exam.price).toFixed(2).replace(".", ",")
+          : "",
+      is_active: exam.is_active,
     });
+  }, [exam, reset, setValue]);
 
-    setIsActive(true);
+  const onSubmit: SubmitHandler<ExamFormValues> = async (data) => {
+    const payLoad = {
+      id: examId,
+      data: {
+        name: data.name,
+        description: data.description || "",
+        preparation_instructions: data.preparation_instructions || "",
+        duration_minutes: data.duration_minutes
+          ? Number.parseInt(data.duration_minutes, 10)
+          : undefined,
+        price: data.price
+          ? Number.parseFloat(data.price.replace(",", "."))
+          : undefined,
+        is_active: isActive,
+      },
+    };
+
+    await handleUpdateExam(payLoad);
+    toast.success("Exame atualizado com sucesso!");
+    router.push(`/exams/${examId}`);
   };
 
+  if (isLoading) {
+    return (
+      <div className="max-w-2xl space-y-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-12 bg-gray-200 rounded-lg animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (isError || !exam) {
+    return (
+      <div className="bg-red-50 border border-red-200 p-6 rounded-xl text-center">
+        <p className="text-red-600 text-lg">Exame não encontrado.</p>
+        <button
+          onClick={() => router.back()}
+          className="mt-4 px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50"
+        >
+          Voltar
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-2xl space-y-6">
       <div className="space-y-1">
-        <h1 className="text-3xl font-extrabold text-slate-900">
-          Criar Novo Exame
-        </h1>
-        <p className="text-sm text-slate-500">
-          Apenas administradores podem criar exames.
+        <AppButton
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => router.back()}
+          className="mb-2 px-0 text-muted-foreground hover:text-foreground"
+        >
+          <FiArrowLeft size={14} /> Voltar
+        </AppButton>
+        <h1 className="text-3xl font-bold text-gray-900">Editar Exame</h1>
+        <p className="text-sm text-gray-500">
+          Apenas administradores podem editar exames.
         </p>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <form
           onSubmit={handleSubmit(onSubmit)}
           noValidate
@@ -99,7 +152,7 @@ export default function CreateExamsPage() {
           <FormTextarea
             label="Instruções de preparo"
             rows={3}
-            placeholder="Ex: Jejum de 8 horas, evitar exercícios nas 24h anteriores..."
+            placeholder="Ex: Jejum de 8 horas..."
             error={errors.preparation_instructions?.message}
             {...register("preparation_instructions")}
           />
@@ -159,9 +212,9 @@ export default function CreateExamsPage() {
             </span>
           </label>
 
-          <AppButton type="submit" loading={isCreatingExam}>
-            <FiPlusCircle size={16} />
-            {isCreatingExam ? "Criando..." : "Criar Exame"}
+          <AppButton type="submit" loading={isUpdatingExam}>
+            <FiSave size={16} />
+            {isUpdatingExam ? "Salvando..." : "Salvar alterações"}
           </AppButton>
         </form>
       </div>

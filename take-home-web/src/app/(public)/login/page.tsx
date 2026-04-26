@@ -3,17 +3,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Box,
-  Button,
-  Field,
-  Heading,
-  Input,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
 import Link from "next/link";
+import { FiLogIn, FiActivity } from "react-icons/fi";
 import { useLogin } from "@/hooks/useAuth";
+import FormInput from "@/components/form/FormInput";
+import AppButton from "@/components/ui/AppButton";
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -38,137 +32,57 @@ export default function LoginPage() {
   };
 
   return (
-    <Box
-      minH="100vh"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      bg="#f0f4ff"
-      px={4}
-    >
-      <Box
-        bg="white"
-        p={10}
-        rounded="2xl"
-        shadow="lg"
-        w="full"
-        maxW="420px"
-        borderWidth="1px"
-        borderColor="#dbeafe"
-      >
-        <Stack gap={8}>
-          <Stack gap={2} textAlign="center">
-            <Text fontSize="3xl" lineHeight={1}>
-              🔬
-            </Text>
-            <Heading size="xl" color="#1e40af" fontWeight="800">
-              ExamPortal
-            </Heading>
-            <Text color="#64748b" fontSize="sm">
-              Faça login para agendar seus exames
-            </Text>
-          </Stack>
+    <div className="min-h-screen flex items-center justify-center bg-sky-50 px-4">
+      <div className="w-full max-w-md rounded-2xl border border-sky-200 bg-white p-8 shadow-lg">
+        <div className="space-y-2 text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 text-blue-700 mx-auto">
+            <FiActivity size={24} />
+          </div>
+          <h1 className="text-3xl font-extrabold text-blue-900">ExamPortal</h1>
+          <p className="text-sm text-slate-500">
+            Faça login para agendar seus exames
+          </p>
+        </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <Stack gap={5}>
-              <Field.Root invalid={!!errors.email}>
-                <Field.Label
-                  style={{
-                    color: "#374151",
-                    fontWeight: 600,
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  E-mail
-                </Field.Label>
-                <Input
-                  type="email"
-                  placeholder="seu@email.com"
-                  {...register("email")}
-                  style={{
-                    background: "#f8fafc",
-                    border: "1.5px solid #cbd5e1",
-                    borderRadius: "8px",
-                    padding: "10px 14px",
-                    fontSize: "0.95rem",
-                    color: "#0f172a",
-                    width: "100%",
-                    outline: "none",
-                  }}
-                />
-                <Field.ErrorText
-                  style={{ color: "#dc2626", fontSize: "0.8rem" }}
-                >
-                  {errors.email?.message}
-                </Field.ErrorText>
-              </Field.Root>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          className="space-y-5"
+        >
+          <FormInput
+            label="E-mail"
+            type="email"
+            placeholder="seu@email.com"
+            requiredMark
+            error={errors.email?.message}
+            {...register("email")}
+          />
 
-              <Field.Root invalid={!!errors.password}>
-                <Field.Label
-                  style={{
-                    color: "#374151",
-                    fontWeight: 600,
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  Senha
-                </Field.Label>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  {...register("password")}
-                  style={{
-                    background: "#f8fafc",
-                    border: "1.5px solid #cbd5e1",
-                    borderRadius: "8px",
-                    padding: "10px 14px",
-                    fontSize: "0.95rem",
-                    color: "#0f172a",
-                    width: "100%",
-                    outline: "none",
-                  }}
-                />
-                <Field.ErrorText
-                  style={{ color: "#dc2626", fontSize: "0.8rem" }}
-                >
-                  {errors.password?.message}
-                </Field.ErrorText>
-              </Field.Root>
+          <FormInput
+            label="Senha"
+            type="password"
+            placeholder="••••••••"
+            requiredMark
+            error={errors.password?.message}
+            {...register("password")}
+          />
 
-              <Button
-                type="submit"
-                w="full"
-                loading={isLoggingIn}
-                loadingText="Entrando..."
-                style={{
-                  background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
-                  color: "white",
-                  fontWeight: 700,
-                  fontSize: "1rem",
-                  padding: "12px",
-                  borderRadius: "8px",
-                  marginTop: "4px",
-                  cursor: "pointer",
-                  border: "none",
-                  letterSpacing: "0.025em",
-                }}
-              >
-                Entrar
-              </Button>
-            </Stack>
-          </form>
+          <AppButton type="submit" loading={isLoggingIn} className="w-full">
+            <FiLogIn size={16} />
+            {isLoggingIn ? "Entrando..." : "Entrar"}
+          </AppButton>
+        </form>
 
-          <Text textAlign="center" fontSize="sm" style={{ color: "#64748b" }}>
-            Não tem conta?{" "}
-            <Link
-              href="/register"
-              style={{ color: "#2563eb", fontWeight: 700 }}
-            >
-              Cadastre-se agora
-            </Link>
-          </Text>
-        </Stack>
-      </Box>
-    </Box>
+        <p className="text-center text-sm text-slate-500 mt-6">
+          Não tem conta?{" "}
+          <Link
+            href="/register"
+            className="font-bold text-blue-600 hover:text-blue-700"
+          >
+            Cadastre-se agora
+          </Link>
+        </p>
+      </div>
+    </div>
   );
 }

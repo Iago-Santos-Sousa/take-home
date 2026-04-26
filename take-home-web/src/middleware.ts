@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decodeJWT, isTokenExpired } from "@/lib/jwt";
 
-// Rotas que exigem autenticação simples (qualquer role)
 const AUTHENTICATED_ROUTES = [
   "/dashboard",
   "/profile",
@@ -9,10 +8,7 @@ const AUTHENTICATED_ROUTES = [
   "/appointments",
 ];
 
-// Rotas que exigem role "admin"
 const ADMIN_ROUTES = ["/admin", "/create-exams"];
-
-// Rotas públicas (não redireciona se já autenticado)
 const PUBLIC_ROUTES = ["/", "/login", "/register"];
 
 export default function middleware(request: NextRequest) {
@@ -30,22 +26,22 @@ export default function middleware(request: NextRequest) {
     route === "/" ? pathname === "/" : pathname.startsWith(route),
   );
 
-  // Rota pública: redireciona para dashboard se já logado
   if (isPublicRoute) {
     if (token) {
       const payload = decodeJWT(token);
+
       if (payload && !isTokenExpired(payload)) {
         return NextResponse.redirect(new URL("/exams", request.url));
       }
     }
+
     return NextResponse.next();
   }
 
-  // Rota protegida: sem token → login
   if (isAuthenticatedRoute || isAdminRoute) {
     if (!token) {
       const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname); // para redirecionar após login
+      loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
 
@@ -54,11 +50,10 @@ export default function middleware(request: NextRequest) {
     // Token inválido ou expirado
     if (!payload || isTokenExpired(payload)) {
       const response = NextResponse.redirect(new URL("/login", request.url));
-      response.cookies.delete("access_token"); // limpa cookie inválido
+      response.cookies.delete("access_token");
       return response;
     }
 
-    // Rota de admin: verifica role
     if (isAdminRoute && payload.roles?.[0] !== "admin") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }

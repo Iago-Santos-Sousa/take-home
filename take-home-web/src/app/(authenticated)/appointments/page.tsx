@@ -1,26 +1,37 @@
 "use client";
 
-import {
-  Box,
-  Button,
-  Field,
-  Heading,
-  HStack,
-  Input,
-  Portal,
-  Skeleton,
-  Stack,
-  Text,
-  Dialog,
-} from "@chakra-ui/react";
 import { useState } from "react";
+import Link from "next/link";
 import { useAppointments, useUpdateAppointment } from "@/hooks/useAppointments";
-import { toaster } from "@/components/ui/toaster";
+import { toast } from "sonner";
 import type { IAppointment } from "@/types/appointment";
 import AppointmentCard from "@/components/AppointmentCard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import AppButton from "@/components/ui/AppButton";
+import { FiCalendar, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+const TAKE = 8;
 
 export default function AppointmentsPage() {
-  const { data: appointments, isLoading, isError } = useAppointments();
+  const [page, setPage] = useState(1);
+
+  const {
+    data: appointmentsPage,
+    isLoading,
+    isError,
+  } = useAppointments({
+    page,
+    take: TAKE,
+  });
+
   const { handleUpdateAppointment, isUpdatingAppointment } =
     useUpdateAppointment();
 
@@ -30,7 +41,9 @@ export default function AppointmentsPage() {
   const [newScheduledAt, setNewScheduledAt] = useState("");
 
   const minDateTime = new Date();
+
   minDateTime.setMinutes(minDateTime.getMinutes() + 30);
+
   const minDateTimeStr = minDateTime.toISOString().slice(0, 16);
 
   const openEdit = (appointment: IAppointment) => {
@@ -65,7 +78,7 @@ export default function AppointmentsPage() {
         data: { status: "cancelled" },
       });
 
-      toaster.create({ title: "Agendamento cancelado", type: "info" });
+      toast.info("Agendamento cancelado");
       setEditingAppointment(null);
     } catch (error) {
       console.error("Erro ao cancelar agendamento:", error);
@@ -73,108 +86,122 @@ export default function AppointmentsPage() {
   };
 
   return (
-    <Stack gap={6}>
-      <Heading size="xl">Meus Agendamentos</Heading>
+    <div className="flex flex-col gap-6">
+      <h1 className="text-3xl font-bold text-foreground">Meus Agendamentos</h1>
 
       {isError && (
-        <Box
-          bg="red.50"
-          p={4}
-          rounded="lg"
-          borderWidth="1px"
-          borderColor="red.200"
-        >
-          <Text color="red.600">Erro ao carregar agendamentos.</Text>
-        </Box>
+        <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
+          <p className="text-red-600">Erro ao carregar agendamentos.</p>
+        </div>
       )}
 
       {isLoading && (
-        <Stack gap={4}>
+        <div className="flex flex-col gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} height="120px" rounded="xl" />
+            <Skeleton key={i} className="h-30 rounded-xl" />
           ))}
-        </Stack>
+        </div>
       )}
 
-      {!isLoading && appointments?.length === 0 && (
-        <Box textAlign="center" py={16} bg="white" rounded="xl" shadow="sm">
-          <Text fontSize="3xl" mb={3}>
-            📅
-          </Text>
-          <Text fontSize="lg" color="gray.500" mb={4}>
+      {!isLoading && appointmentsPage?.data.length === 0 && (
+        <div className="text-center py-16 bg-white rounded-xl shadow-sm">
+          <p className="text-3xl mb-3">
+            <FiCalendar className="inline" />
+          </p>
+          <p className="text-lg text-muted-foreground mb-4">
             Você ainda não tem agendamentos
-          </Text>
-          <a href="/exams">
-            <Button colorPalette="blue">Buscar exames</Button>
-          </a>
-        </Box>
+          </p>
+          <Link href="/exams">
+            <AppButton>Buscar exames</AppButton>
+          </Link>
+        </div>
       )}
 
-      <Stack gap={4}>
-        {appointments?.map((appointment) => (
+      <div className="flex flex-col gap-4">
+        {appointmentsPage?.data.map((appointment) => (
           <AppointmentCard
             key={appointment.appointment_id}
             appointment={appointment}
             onEdit={openEdit}
           />
         ))}
-      </Stack>
+      </div>
 
-      <Dialog.Root
+      {appointmentsPage && appointmentsPage.meta.pageCount > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-2">
+          <AppButton
+            variant="outline"
+            size="sm"
+            disabled={!appointmentsPage.meta.hasPreviousPage}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            <FiChevronLeft /> Anterior
+          </AppButton>
+          <span className="text-sm text-muted-foreground">
+            Página {appointmentsPage.meta.page} de{" "}
+            {appointmentsPage.meta.pageCount}
+          </span>
+          <AppButton
+            variant="outline"
+            size="sm"
+            disabled={!appointmentsPage.meta.hasNextPage}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Próxima <FiChevronRight />
+          </AppButton>
+        </div>
+      )}
+
+      <Dialog
         open={!!editingAppointment}
-        onOpenChange={(e) => !e.open && setEditingAppointment(null)}
+        onOpenChange={(open) => !open && setEditingAppointment(null)}
       >
-        <Portal>
-          <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content maxW="md" p={6}>
-              <Stack gap={5}>
-                <Dialog.Title>
-                  <Heading size="md">Editar Agendamento</Heading>
-                </Dialog.Title>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Agendamento</DialogTitle>
+          </DialogHeader>
 
-                <Field.Root required>
-                  <Field.Label>Nova data e horário</Field.Label>
-                  <Input
-                    type="datetime-local"
-                    min={minDateTimeStr}
-                    value={newScheduledAt}
-                    onChange={(e) => setNewScheduledAt(e.target.value)}
-                  />
-                </Field.Root>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="new-scheduled-at">Nova data e horário</Label>
+              <Input
+                id="new-scheduled-at"
+                type="datetime-local"
+                min={minDateTimeStr}
+                value={newScheduledAt}
+                onChange={(e) => setNewScheduledAt(e.target.value)}
+              />
+            </div>
+          </div>
 
-                <HStack justify="space-between" gap={3}>
-                  <Button
-                    variant="outline"
-                    colorPalette="red"
-                    size="sm"
-                    loading={isUpdatingAppointment}
-                    onClick={handleCancel}
-                  >
-                    Cancelar agendamento
-                  </Button>
-                  <HStack gap={2}>
-                    <Dialog.CloseTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        Fechar
-                      </Button>
-                    </Dialog.CloseTrigger>
-                    <Button
-                      colorPalette="blue"
-                      size="sm"
-                      loading={isUpdatingAppointment}
-                      loadingText="Salvando..."
-                      onClick={handleUpdate}
-                    >
-                      Salvar
-                    </Button>
-                  </HStack>
-                </HStack>
-              </Stack>
-            </Dialog.Content>
-          </Dialog.Positioner>
-        </Portal>
-      </Dialog.Root>
-    </Stack>
+          <DialogFooter className="flex-col sm:flex-row sm:justify-between">
+            <AppButton
+              variant="danger"
+              size="sm"
+              disabled={isUpdatingAppointment}
+              onClick={handleCancel}
+            >
+              Cancelar agendamento
+            </AppButton>
+            <div className="flex gap-2">
+              <AppButton
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditingAppointment(null)}
+              >
+                Fechar
+              </AppButton>
+              <AppButton
+                size="sm"
+                disabled={isUpdatingAppointment}
+                onClick={handleUpdate}
+              >
+                {isUpdatingAppointment ? "Salvando..." : "Salvar"}
+              </AppButton>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

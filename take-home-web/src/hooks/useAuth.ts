@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { api } from "@/integration/api";
 import { useUser } from "@/contexts/user-context";
-import { toaster } from "@/components/ui/toaster";
+import { toast } from "sonner";
 import { extractErrorMessage } from "@/utils/extractErrorMessage";
 
 interface ILoginInput {
@@ -44,7 +44,7 @@ export function useLogin() {
     },
     onError: (error: unknown) => {
       const message = extractErrorMessage(error, "Credenciais inválidas");
-      toaster.create({ title: message, type: "error" });
+      toast.error(message);
     },
   });
 
@@ -65,15 +65,12 @@ export function useRegister() {
         return response.data;
       },
       onSuccess: () => {
-        toaster.create({
-          title: "Conta criada com sucesso! Faça login para continuar.",
-          type: "success",
-        });
+        toast.success("Conta criada com sucesso! Faça login para continuar.");
         router.push("/login");
       },
       onError: (error: unknown) => {
         const message = extractErrorMessage(error, "Falha ao criar conta");
-        toaster.create({ title: message, type: "error" });
+        toast.error(message);
       },
     },
   );

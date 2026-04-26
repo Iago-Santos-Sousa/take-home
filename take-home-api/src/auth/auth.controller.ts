@@ -17,12 +17,8 @@ import { SignInDto } from "./dto/signin.dto";
 import { Public } from "@/common/decorators/skipAuth.decorator";
 import { LogoutDocs, RefreshTokenDocs, SignInDocs } from "./auth.docs";
 
-// Cookie lifetimes são DESACOPLADOS da expiração do JWT.
-// O JWT controla a validade da sessão; o cookie é apenas o transporte.
-// access_token cookie dura mais que o JWT para que o middleware possa
-// decodificá-lo e o interceptor do front-end acione o refresh transparente.
-const ACCESS_TOKEN_COOKIE_MS = 20 * 60 * 1000; // 20 min (margem após JWT de 15min expirar)
-const REFRESH_TOKEN_COOKIE_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias (alinhado com JWT_REFRESH_EXPIRES)
+const ACCESS_TOKEN_COOKIE_MS = 20 * 60 * 1000;
+const REFRESH_TOKEN_COOKIE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const COOKIE_BASE = {
   httpOnly: true,

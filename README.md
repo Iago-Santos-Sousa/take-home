@@ -1,170 +1,129 @@
 # Portal de Agendamento de Exames
 
-Sistema completo para agendamento de exames laboratoriais, com portal web para pacientes e API RESTful.
+Sistema completo para agendamento de exames laboratoriais.
 
 ## Stack
 
-- **API**: NestJS 11, TypeORM, PostgreSQL 16, Redis 7, JWT (cookies httpOnly)
-- **Web**: Next.js 16 (App Router), TypeScript, Chakra UI, React Query, React Hook Form + Zod
-- **Infra**: Docker Compose, GitHub Actions CI
+- API: NestJS 11, TypeORM, PostgreSQL, Redis, JWT com cookie httpOnly
+- Web: Next.js 16 (App Router), Tailwind CSS, React Hook Form, Zod, date-fns, React Query
+- Infra: Docker Compose + GitHub Actions (CI)
 
----
-
-## Rodando com Docker (recomendado)
-
-> Pré-requisito: [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/)
+## Como rodar com Docker
 
 ```bash
-# Clone o repositório
-git clone <repo-url>
-cd take-home
-
-# Suba todos os serviços (API, Web, PostgreSQL, Redis)
 docker compose up --build
 ```
 
-Aguarde todos os containers ficarem saudáveis. Acesse:
+Serviços:
 
-| Serviço    | URL                            |
-| ---------- | ------------------------------ |
-| 🌐 Web     | http://localhost:3000          |
-| 🔌 API     | http://localhost:8080/api      |
-| 📚 Swagger | http://localhost:8080/api/docs |
+- Web: http://localhost:3000
+- API: http://localhost:8080/api
+- Swagger: http://localhost:8080/api/docs
+- PostgreSQL: localhost:5432
+- Redis: localhost:6379
 
-O banco de dados é inicializado automaticamente com **10 exames** via migration do TypeORM.
+## Variáveis de ambiente
 
----
+### API (take-home-api/.env)
 
-## Rodando em modo desenvolvimento
+- APP_PORT=3001
+- DB_HOST=localhost
+- DB_PORT=5432
+- DB_USER=postgres
+- DB_PASSWORD=postgres123
+- DB_SCHEMA=take-home
+- DB_SYNCHRONIZE=false
+- REDIS_URL=redis://localhost:6379
+- JWT_SECRET=...
+- JWT_REFRESH_SECRET=...
+- JWT_EXPIRES=30m
+- JWT_REFRESH_EXPIRES=45m
+- CORS_ORIGIN=http://localhost:3000
 
-### Pré-requisitos
+### Web (take-home-web/.env)
 
-- Node.js 20+
-- PostgreSQL rodando localmente
-- Redis rodando localmente
+- NEXT_PUBLIC_API_URL=http://localhost:8080/api
 
-### 1. API (take-home-api)
+## Regras de negócio implementadas
 
-```bash
-cd take-home-api
+### Exames
 
-# Copie o env de exemplo
-cp .env.example .env
-# Edite o .env com suas credenciais do banco
+- CRUD de exames na API
+- `POST /exams` e `PATCH /exams/:id` apenas para admin
+- Página de edição de exame no front-end: `/exams/[id]/edit` (usa `useUpdateExam`)
+- Inputs de criação/edição:
+  - `duration_minutes`: apenas inteiro
+  - `price`: máscara monetária no formato `99,99`
+- Validação em 2 etapas:
+  - Front-end (Zod)
+  - Back-end (class-validator)
 
-# Instale as dependências
-npm install
+### Agendamentos
 
-# Rode em modo dev (com hot reload)
-npm run start:dev
-```
+- `GET /appointments` paginado (page/take/order/status)
+- Cache Redis aplicado na listagem paginada de agendamentos (TTL 5 min)
+- Cache invalidado ao criar/atualizar agendamento
+- Conflito de horário considera duração do exame:
+  - Duração do exame definida em `duration_minutes`
+  - Quando não informada, duração padrão de 60 minutos
+- Horário comercial obrigatório:
+  - Início entre 08:00 e 17:30
+  - Fim do exame deve permanecer dentro do horário comercial
+- Front-end valida horário comercial no modal de agendamento
 
-A API estará disponível em `http://localhost:3001/api`.  
-Swagger em `http://localhost:3001/api/docs`.
+### Autenticação
 
-### 2. Web (take-home-web)
+- Login com cookies httpOnly
+- Middleware no Next injeta headers do usuário para layout autenticado
+- Rotas administrativas protegidas no back-end e por checagem de role no front-end
 
-```bash
-cd take-home-web
+## Migrações (TypeORM + PostgreSQL)
 
-# O .env já está configurado para desenvolvimento local
-# NEXT_PUBLIC_API_URL=http://localhost:8080/api
+Fluxo adotado (recomendado):
 
-# Instale as dependências
-npm install
+1. Migration de criação de tabelas (`1699999999999-CreateTables.ts`)
+2. Migration de seed (`1700000000000-SeedExams.ts`)
 
-# Rode em modo dev
-npm run dev
-```
+`data-source.ts` está com:
 
-O portal estará disponível em `http://localhost:3000`.
+- `synchronize: false`
+- `migrationsRun: true`
 
----
+Assim, ao subir a API no Docker, as tabelas são criadas por migration e o seed de exames é executado em seguida.
 
-## Variáveis de Ambiente
-
-### API (`take-home-api/.env`)
-
-| Variável              | Descrição                  | Padrão                   |
-| --------------------- | -------------------------- | ------------------------ |
-| `APP_PORT`            | Porta da API               | `3001`                   |
-| `DB_HOST`             | Host do PostgreSQL         | `localhost`              |
-| `DB_PORT`             | Porta do PostgreSQL        | `5432`                   |
-| `DB_USER`             | Usuário do banco           | `postgres`               |
-| `DB_PASSWORD`         | Senha do banco             | —                        |
-| `DB_SCHEMA`           | Nome do banco de dados     | `take-home`              |
-| `REDIS_URL`           | URL do Redis               | `redis://localhost:6379` |
-| `JWT_SECRET`          | Secret do access token     | —                        |
-| `JWT_REFRESH_SECRET`  | Secret do refresh token    | —                        |
-| `JWT_EXPIRES`         | Expiração do access token  | `30m`                    |
-| `JWT_REFRESH_EXPIRES` | Expiração do refresh token | `45m`                    |
-| `CORS_ORIGIN`         | Origem permitida pelo CORS | `http://localhost:3000`  |
-
-### Web (`take-home-web/.env`)
-
-| Variável              | Descrição       |
-| --------------------- | --------------- |
-| `NEXT_PUBLIC_API_URL` | URL base da API |
-
----
-
-## Funcionalidades
+## Testes
 
 ### API
 
-| Método | Endpoint                  | Autenticação | Descrição                                            |
-| ------ | ------------------------- | ------------ | ---------------------------------------------------- |
-| POST   | `/api/auth/login`         | Público      | Login — seta cookies httpOnly                        |
-| POST   | `/api/auth/refresh-token` | Público      | Renova o access token via cookie                     |
-| POST   | `/api/auth/logout`        | Autenticado  | Logout — limpa cookies                               |
-| POST   | `/api/user`               | Público      | Criar usuário                                        |
-| POST   | `/api/exams`              | Admin        | Criar exame                                          |
-| GET    | `/api/exams`              | Público      | Listar exames (busca + paginação + cache Redis 5min) |
-| GET    | `/api/exams/:id`          | Público      | Detalhes de um exame                                 |
-| PATCH  | `/api/exams/:id`          | Admin        | Editar exame                                         |
-| POST   | `/api/appointments`       | Autenticado  | Criar agendamento                                    |
-| GET    | `/api/appointments`       | Autenticado  | Listar agendamentos do usuário                       |
-| PATCH  | `/api/appointments/:id`   | Autenticado  | Atualizar agendamento (owner only)                   |
+```bash
+cd take-home-api
+npm run test
+```
 
-### Portal Web
-
-| Rota            | Acesso      | Descrição                      |
-| --------------- | ----------- | ------------------------------ |
-| `/login`        | Público     | Tela de login                  |
-| `/register`     | Público     | Cadastro de usuário            |
-| `/exams`        | Autenticado | Listagem com busca e paginação |
-| `/exams/[id]`   | Autenticado | Detalhes + botão agendar       |
-| `/appointments` | Autenticado | Meus agendamentos              |
-| `/create-exams` | Admin       | Formulário de criação de exame |
-
----
-
-## Decisões técnicas
-
-### Agendamento de horários
-
-O cliente envia uma string ISO 8601 (`scheduled_at`) para o backend. Essa abordagem é mais flexível que slots fixos, permitindo que o frontend use qualquer seletor de data/hora. O backend valida que o horário não está no passado e que não há conflito para o mesmo usuário.
-
-### Autenticação com cookies seguros
-
-Os tokens JWT (access + refresh) são armazenados como cookies `httpOnly`, protegendo contra ataques XSS. O JwtStrategy aceita tokens tanto via cookie quanto via `Authorization: Bearer` header (para compatibilidade com Swagger).
-
-### Cache Redis
-
-A listagem de exames (`GET /api/exams`) usa `CacheInterceptor` do NestJS com TTL de 5 minutos via Redis. Ao criar ou editar exames, o cache é invalidado automaticamente.
-
-### Rate Limiting
-
-Implementado via `@nestjs/throttler` com limite de 100 requisições por minuto por IP.
-
----
-
-## Criando um usuário admin
-
-Para criar um usuário admin, use a rota `POST /api/user` passando `"role": "admin"`:
+Type-check da API:
 
 ```bash
-curl -X POST http://localhost:8080/api/user \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Admin", "email": "admin@example.com", "password": "senha123", "role": "admin"}'
+npx tsc --noEmit
 ```
+
+### Web
+
+Type-check do front-end:
+
+```bash
+cd take-home-web
+npx tsc --noEmit
+```
+
+## CI (GitHub Actions)
+
+Arquivo: `.github/workflows/ci.yml`
+
+Pipeline executa:
+
+- Lint da API
+- Lint do Web
+- Build da API
+- Build do Web
+
+Objetivo: impedir merge de código quebrado (erro de lint/build) e manter qualidade mínima automaticamente em push/PR.

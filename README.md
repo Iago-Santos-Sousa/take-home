@@ -9,6 +9,7 @@ Sistema completo para agendamento de exames laboratoriais.
 - Infra: Docker Compose + GitHub Actions (CI)
 
 ## Como rodar com Docker
+**Observação:** Para garantir a execução da aplicação com o Docker, exclua as imagens e containers do Redis, PostgreSQL, API e Front-end de testes anteriores criados, para evitar conflitos e erros e conseguir testar de maneira correta e sem erros.
 
 ```bash
 docker compose up --build
